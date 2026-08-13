@@ -1,0 +1,30 @@
+# Campus core router with the {{ENDPOINT_NAME}} DHCP segment, RouterOS 7.21.5
+/system identity set name={{ROUTER_NAME}}
+/user set [find name=admin] password="lab-routeros-7.21.5"
+
+/ip firewall filter remove [find]
+/ip firewall nat remove [find]
+/ip firewall raw remove [find]
+
+/ip address
+add address={{ROUTER_ID}}/32 interface=lo comment="{{ROUTER_NAME}} loopback"
+add address={{ETHER2_ADDRESS}} interface=ether2 comment="{{ETHER2_LINK}}"
+add address={{ETHER3_ADDRESS}} interface=ether3 comment="{{ETHER3_LINK}}"
+add address={{LAN_GATEWAY}}/24 interface=ether4 comment="{{ENDPOINT_NAME}} LAN"
+
+/ip pool
+add name=pool-{{ENDPOINT_SLUG}} ranges={{DHCP_RANGE}}
+/ip dhcp-server
+add address-pool=pool-{{ENDPOINT_SLUG}} disabled=no interface=ether4 lease-time=1h name=dhcp-{{ENDPOINT_SLUG}}
+/ip dhcp-server network
+add address={{LAN_PREFIX}} gateway={{LAN_GATEWAY}} comment="{{ENDPOINT_NAME}} LAN"
+
+/routing ospf instance
+add name=campus-ospf version=2 router-id={{ROUTER_ID}}
+/routing ospf area
+add name=backbone area-id=0.0.0.0 instance=campus-ospf
+/routing ospf interface-template
+add area=backbone interfaces=ether2 type=ptp cost=10
+add area=backbone interfaces=ether3 type=ptp cost=10
+add area=backbone interfaces=ether4 passive
+add area=backbone interfaces=lo passive

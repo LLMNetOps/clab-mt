@@ -1,0 +1,78 @@
+name: campus-ebgp
+
+# Containerlab's default management network is intentionally used.  RouterOS
+# management is ether1; all links below start at ether2/eth1.
+topology:
+  nodes:
+    R1:
+      kind: mikrotik_ros
+      image: vrnetlab/mikrotik_routeros:7.21.5
+      startup-config: configs/routeros/r1.rsc
+      env:
+        CLAB_MGMT_PASSTHROUGH: "true"
+        QEMU_MEMORY: "1024"
+        QEMU_SMP: "1"
+
+    R2:
+      kind: mikrotik_ros
+      image: vrnetlab/mikrotik_routeros:7.21.5
+      startup-config: configs/routeros/r2.rsc
+      env:
+        CLAB_MGMT_PASSTHROUGH: "true"
+        QEMU_MEMORY: "1024"
+        QEMU_SMP: "1"
+
+    R3:
+      kind: mikrotik_ros
+      image: vrnetlab/mikrotik_routeros:7.21.5
+      startup-config: configs/routeros/r3.rsc
+      env:
+        CLAB_MGMT_PASSTHROUGH: "true"
+        QEMU_MEMORY: "1024"
+        QEMU_SMP: "1"
+
+    ISP:
+      kind: linux
+      image: local/campus-exabgp:5.0.9
+      binds:
+        - generated/isp.conf:/etc/exabgp/exabgp.conf:ro
+      env:
+        DATA_INTERFACE: eth1
+        DATA_ADDRESS: 10.255.2.2/30
+      cmd: /etc/exabgp/exabgp.conf
+
+    IDREN:
+      kind: linux
+      image: local/campus-exabgp:5.0.9
+      binds:
+        - generated/idren.conf:/etc/exabgp/exabgp.conf:ro
+      env:
+        DATA_INTERFACE: eth1
+        DATA_ADDRESS: 10.255.2.6/30
+      cmd: /etc/exabgp/exabgp.conf
+
+    H1:
+      kind: linux
+      image: local/campus-endpoint:12
+      env:
+        DHCP_INTERFACE: eth1
+
+    H2:
+      kind: linux
+      image: local/campus-endpoint:12
+      env:
+        DHCP_INTERFACE: eth1
+
+  links:
+    # Campus OSPF triangle.
+    - endpoints: [ "R1:ether2", "R2:ether2" ]
+    - endpoints: [ "R2:ether3", "R3:ether3" ]
+    - endpoints: [ "R1:ether3", "R3:ether2" ]
+
+    # R1's external eBGP sessions.
+    - endpoints: [ "R1:ether4", "ISP:eth1" ]
+    - endpoints: [ "R1:ether5", "IDREN:eth1" ]
+
+    # DHCP-served campus LANs.
+    - endpoints: [ "R2:ether4", "H1:eth1" ]
+    - endpoints: [ "R3:ether4", "H2:eth1" ]

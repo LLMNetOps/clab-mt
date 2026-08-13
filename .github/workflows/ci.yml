@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  local-checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Run local tests
+        run: make test
+
+      - name: Verify generated artifacts
+        run: |
+          make generate
+          git diff --exit-code -- generated configs/routeros
+
+      - name: Check shell syntax
+        run: find containers tests tools -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n

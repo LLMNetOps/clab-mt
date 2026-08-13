@@ -1,0 +1,45 @@
+# Python bytecode, environments, tests, and analysis
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.venv/
+venv/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Containerlab runtime state and network captures
+/clab-*/
+*.pcap
+*.pcapng
+*.log
+
+# Router and virtual-machine images
+*.vmdk
+*.qcow2
+*.img
+*.iso
+
+# Editor and operating-system state
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.~lock.*#
+
+# Local agent tooling and issue data
+/.agents/
+/.codex/
+/.scratch/
+/AGENTS.md
+/docs/agents/
