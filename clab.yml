@@ -1,12 +1,17 @@
 name: campus-ebgp
 
-# Containerlab's default management network is intentionally used.  RouterOS
+# Keep management addressing stable across destroy/deploy cycles. RouterOS
 # management is ether1; all links below start at ether2/eth1.
+mgmt:
+  network: campus-ebgp-mgmt
+  ipv4-subnet: 172.20.20.0/24
+
 topology:
   nodes:
     R1:
       kind: mikrotik_ros
       image: vrnetlab/mikrotik_routeros:7.21.5
+      mgmt-ipv4: 172.20.20.11
       startup-config: configs/routeros/r1.rsc
       env:
         CLAB_MGMT_PASSTHROUGH: "true"
@@ -16,6 +21,7 @@ topology:
     R2:
       kind: mikrotik_ros
       image: vrnetlab/mikrotik_routeros:7.21.5
+      mgmt-ipv4: 172.20.20.12
       startup-config: configs/routeros/r2.rsc
       env:
         CLAB_MGMT_PASSTHROUGH: "true"
@@ -25,6 +31,7 @@ topology:
     R3:
       kind: mikrotik_ros
       image: vrnetlab/mikrotik_routeros:7.21.5
+      mgmt-ipv4: 172.20.20.13
       startup-config: configs/routeros/r3.rsc
       env:
         CLAB_MGMT_PASSTHROUGH: "true"
@@ -34,6 +41,7 @@ topology:
     ISP:
       kind: linux
       image: local/campus-exabgp:5.0.9
+      mgmt-ipv4: 172.20.20.21
       binds:
         - generated/isp.conf:/etc/exabgp/exabgp.conf:ro
       env:
@@ -44,6 +52,7 @@ topology:
     IDREN:
       kind: linux
       image: local/campus-exabgp:5.0.9
+      mgmt-ipv4: 172.20.20.22
       binds:
         - generated/idren.conf:/etc/exabgp/exabgp.conf:ro
       env:
@@ -54,12 +63,14 @@ topology:
     H1:
       kind: linux
       image: local/campus-endpoint:12
+      mgmt-ipv4: 172.20.20.31
       env:
         DHCP_INTERFACE: eth1
 
     H2:
       kind: linux
       image: local/campus-endpoint:12
+      mgmt-ipv4: 172.20.20.32
       env:
         DHCP_INTERFACE: eth1
 

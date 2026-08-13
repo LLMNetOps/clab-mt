@@ -87,7 +87,10 @@ The lab-only TCP MD5 authentication applied independently to the R1–ISP and R1
 A LAN segment on which an endpoint host receives its IPv4 address and default gateway from a campus router.
 
 **Management network**:
-The Containerlab-provided control network used to access lab nodes and kept separate from the routed data links.
+The Containerlab-provided `campus-ebgp-mgmt` control network used to access lab
+nodes and kept separate from the routed data links. It uses the fixed
+`172.20.20.0/24` subnet and fixed per-node addresses so management access is
+stable across destroy/deploy cycles.
 
 **Failure scenario**:
 A controlled withdrawal or link event used to validate convergence, such as stopping an external speaker or disabling one campus-core link.

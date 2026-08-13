@@ -119,6 +119,7 @@ to restore the R2-R3 link if any assertion or command fails.
 
 | Segment | Prefix | Endpoints |
 | --- | --- | --- |
+| Management | `172.20.20.0/24` | R1 `.11`, R2 `.12`, R3 `.13`, ISP `.21`, IDREN `.22`, H1 `.31`, H2 `.32` |
 | R1 loopback | `10.255.0.1/32` | R1 |
 | R2 loopback | `10.255.0.2/32` | R2 |
 | R3 loopback | `10.255.0.3/32` | R3 |
