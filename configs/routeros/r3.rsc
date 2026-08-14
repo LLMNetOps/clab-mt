@@ -1,6 +1,5 @@
 # Campus core router with the H2 DHCP segment, RouterOS 7.21.5
 /system identity set name=R3
-/user set [find name=admin] password="lab-routeros-7.21.5"
 
 /ip firewall filter remove [find]
 /ip firewall nat remove [find]

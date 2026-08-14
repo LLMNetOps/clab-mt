@@ -6,6 +6,15 @@ from tools.render_routeros import render_configs
 
 
 class RouterOsRendererTests(unittest.TestCase):
+    def test_checked_in_startup_configs_do_not_change_login_credentials(self):
+        config_dir = Path(__file__).parents[1] / "configs" / "routeros"
+
+        for config_path in config_dir.glob("*.rsc*"):
+            with self.subTest(config=config_path.name):
+                config = config_path.read_text(encoding="utf-8")
+                self.assertNotIn("/user set", config)
+                self.assertNotIn("password=", config)
+
     def test_renders_edge_policy_and_both_campus_core_routers(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             config_dir = Path(temp_dir)

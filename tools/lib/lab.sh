@@ -56,7 +56,7 @@ lab_interface_ip() {
 lab_routeros_command() {
     local node=$1
     local command=$2
-    local password=${ROUTEROS_PASSWORD:-$(sed -n 's/^\/user set .*password="\([^"]*\)"/\1/p' configs/routeros/r1.rsc)}
+    local password=${ROUTEROS_PASSWORD:-admin}
     local host="${LAB_PREFIX}-${node}"
 
     ROUTEROS_HOST="$host" ROUTEROS_PASSWORD="$password" ROUTEROS_COMMAND="$command" python3 -c '

@@ -74,8 +74,8 @@ a pull-request title when it will become a squash-merge commit.
 
 - Do not commit `clab-*` deployment state, generated TLS material, private
   keys, credentials, packet captures, caches, or local agent files.
-- The checked-in RouterOS password and eBGP TCP MD5 strings are lab-only test
-  values. Do not replace them with real credentials.
+- The lab keeps the default RouterOS `admin` / `admin` credential and uses
+  lab-only eBGP TCP MD5 strings. Do not replace them with real credentials.
 - Keep the management network separate from routed data links.
 - Preserve the exact pinned runtime and package versions unless the change is
   explicitly an upgrade with regenerated artifacts and verification.

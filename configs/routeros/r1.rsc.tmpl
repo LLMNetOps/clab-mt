@@ -1,6 +1,5 @@
 # Campus edge router, RouterOS 7.21.5
 /system identity set name=R1
-/user set [find name=admin] password="lab-routeros-7.21.5"
 
 # The lab is intentionally permissive; it has no NAT and no external access.
 /ip firewall filter remove [find]

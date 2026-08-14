@@ -71,8 +71,8 @@ updating a build input is an explicit maintenance change.
 
 The combined shortcut is `make deploy` after the RouterOS image exists.
 
-The lab-only RouterOS console/SSH credential configured by the startup files is
-`admin` / `lab-routeros-7.21.5`.
+The lab uses the default RouterOS console/SSH credential `admin` / `admin`.
+The startup files do not change the default username or password.
 
 ## Acceptance test
 
