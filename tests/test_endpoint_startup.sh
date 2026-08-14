@@ -25,4 +25,18 @@ if docker exec "$container" ip -4 route show default | grep -q 'dev eth0'; then
     exit 1
 fi
 
-echo "endpoint startup test: delayed eth1 attachment passed"
+docker exec "$container" /usr/local/bin/campus-dhcp-client status \
+    | grep -F "interface: eth1" >/dev/null
+
+docker exec \
+    -e DHCP_OPERATION_TIMEOUT=5 \
+    "$container" \
+    /usr/local/bin/campus-dhcp-client release >/dev/null
+if [[ "$(docker inspect -f '{{.State.Running}}' "$container")" != true ]]; then
+    echo "endpoint startup test: DHCP release stopped the endpoint container" >&2
+    exit 1
+fi
+docker exec "$container" /usr/local/bin/campus-dhcp-client status \
+    | grep -F "client: released (stopped)" >/dev/null
+
+echo "endpoint startup test: delayed eth1 attachment and DHCP release passed"

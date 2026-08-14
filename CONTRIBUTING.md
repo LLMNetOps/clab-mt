@@ -34,7 +34,7 @@ git diff --exit-code -- generated configs/routeros
 Changes to endpoint or ExaBGP startup should additionally run:
 
 ```bash
-make images
+make helper-images
 make test-endpoint-startup
 make test-exabgp-startup
 ```
@@ -47,8 +47,18 @@ make validate
 make failure-tests
 ```
 
+Changes to endpoint DHCP behavior should also run:
+
+```bash
+make test-dhcp-client
+```
+
 State which checks you ran in the pull request. Explain why any applicable
 check could not be run.
+
+Keep operator actions under `tools/`. Put automated assertions under
+`tests/`. Tests under `tests/live/` may call operator tools while they verify
+a deployed-lab scenario.
 
 ## Commit and pull-request conventions
 

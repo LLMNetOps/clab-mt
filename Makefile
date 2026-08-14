@@ -8,19 +8,35 @@ IDREN_PREFIXES ?= 200
 IDREN_DIRECT_PREFIXES ?= 100
 IDREN_TRANSIT_PREFIXES ?= 100
 SHARED_PREFIXES ?= 50
+LINK ?=
+TRAFFIC_SOURCE ?= H1
+TRAFFIC_DESTINATION ?= H2
+TRAFFIC_COUNT ?= 0
+TRAFFIC_INTERVAL ?= 1
+ENDPOINT ?= H1
+DHCP_TIMEOUT ?= 30
 
-.PHONY: help generate generate-prefixes render-configs test test-endpoint-startup test-exabgp-startup images deploy validate failure-tests destroy
+.PHONY: help generate generate-prefixes render-configs test test-endpoint-startup test-exabgp-startup test-dhcp-client routeros-image helper-images images deploy validate link-status link-down link-up traffic dhcp-status dhcp-release dhcp-renew failure-tests destroy
 
 help:
+	@echo "make routeros-image build the pinned RouterOS image when it is missing"
+	@echo "make images         build the RouterOS, endpoint, and ExaBGP images"
+	@echo "make deploy         generate files, build images, and deploy the lab"
+	@echo "make validate       verify endpoint reachability and routing state"
+	@echo "make link-status LINK=r2-r3|isp|idren  show a lab link"
+	@echo "make link-down   LINK=r2-r3|isp|idren  disable a lab link"
+	@echo "make link-up     LINK=r2-r3|isp|idren  restore a lab link"
+	@echo "make traffic        send H1-to-H2 ICMP traffic until interrupted"
+	@echo "make dhcp-status  ENDPOINT=H1|H2  show client DHCP state"
+	@echo "make dhcp-release ENDPOINT=H1|H2  release a client lease"
+	@echo "make dhcp-renew   ENDPOINT=H1|H2  request a client lease"
+	@echo "make failure-tests  run automated link-failure and recovery tests"
+	@echo "make destroy        destroy the Containerlab lab"
 	@echo "make generate       regenerate BGP announcements and RouterOS configs"
-	@echo "make test           run local generator tests"
+	@echo "make test           run local unit and contract tests"
 	@echo "make test-endpoint-startup  verify delayed data-interface attachment"
 	@echo "make test-exabgp-startup    verify delayed speaker-interface attachment"
-	@echo "make images         build endpoint and ExaBGP helper images"
-	@echo "make deploy         generate, build images, and deploy Containerlab"
-	@echo "make validate       assert reachability, routing adjacencies, and policy"
-	@echo "make failure-tests  flap external/core links and assert convergence"
-	@echo "make destroy        destroy the Containerlab lab"
+	@echo "make test-dhcp-client       verify client lease release and renewal"
 
 generate: generate-prefixes render-configs
 
@@ -39,6 +55,8 @@ render-configs:
 test:
 	$(PYTHON) -m unittest discover -s tests -v
 	bash tests/test_lab_manifest.sh
+	bash tests/test_operator_tools.sh
+	bash tests/test_routeros_image_build.sh
 
 test-endpoint-startup:
 	bash tests/test_endpoint_startup.sh
@@ -46,9 +64,17 @@ test-endpoint-startup:
 test-exabgp-startup:
 	bash tests/test_exabgp_startup.sh
 
-images:
+test-dhcp-client:
+	bash tests/live/test_dhcp_client.sh
+
+routeros-image:
+	bash tools/build-routeros-image.sh
+
+helper-images:
 	docker build -f containers/endpoint/Dockerfile -t local/campus-endpoint:12 .
 	docker build -f containers/exabgp/Dockerfile -t local/campus-exabgp:5.0.9 .
+
+images: routeros-image helper-images
 
 deploy: generate images
 	containerlab deploy -t $(LAB_TOPOLOGY) --reconfigure
@@ -56,8 +82,34 @@ deploy: generate images
 validate:
 	tools/validate.sh
 
+link-status:
+	bash tools/link-state.sh status "$(LINK)"
+
+link-down:
+	bash tools/link-state.sh down "$(LINK)"
+
+link-up:
+	bash tools/link-state.sh up "$(LINK)"
+
+traffic:
+	TRAFFIC_SOURCE="$(TRAFFIC_SOURCE)" \
+	TRAFFIC_DESTINATION="$(TRAFFIC_DESTINATION)" \
+	TRAFFIC_COUNT="$(TRAFFIC_COUNT)" \
+	TRAFFIC_INTERVAL="$(TRAFFIC_INTERVAL)" \
+		bash tools/traffic.sh
+
+dhcp-status:
+	DHCP_TIMEOUT="$(DHCP_TIMEOUT)" bash tools/dhcp-client.sh status "$(ENDPOINT)"
+
+dhcp-release:
+	DHCP_TIMEOUT="$(DHCP_TIMEOUT)" bash tools/dhcp-client.sh release "$(ENDPOINT)"
+
+dhcp-renew:
+	DHCP_TIMEOUT="$(DHCP_TIMEOUT)" bash tools/dhcp-client.sh renew "$(ENDPOINT)"
+
 failure-tests:
-	tools/failure-tests.sh
+	bash tests/live/test_external_link_failure.sh
+	bash tests/live/test_core_link_failure.sh
 
 destroy:
 	containerlab destroy -t $(LAB_TOPOLOGY)

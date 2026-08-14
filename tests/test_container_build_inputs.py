@@ -80,6 +80,16 @@ class ContainerBuildInputTests(unittest.TestCase):
             "COPY containers/endpoint/dhclient.conf /etc/dhcp/dhclient.conf",
             dockerfile,
         )
+        self.assertIn(
+            "COPY containers/endpoint/dhcp-client.sh "
+            "/usr/local/bin/campus-dhcp-client",
+            dockerfile,
+        )
+
+        entrypoint = (ROOT / "containers/endpoint/entrypoint.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("campus-dhcp-client supervise", entrypoint)
 
 
 if __name__ == "__main__":

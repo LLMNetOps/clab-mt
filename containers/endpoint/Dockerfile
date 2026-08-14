@@ -16,7 +16,11 @@ RUN apt-get update \
 
 COPY containers/common/wait-for-interface.sh /usr/local/lib/campus/wait-for-interface.sh
 COPY containers/endpoint/dhclient.conf /etc/dhcp/dhclient.conf
+COPY containers/endpoint/dhcp-client.sh /usr/local/bin/campus-dhcp-client
 COPY containers/endpoint/entrypoint.sh /usr/local/bin/campus-endpoint
-RUN chmod 0755 /usr/local/lib/campus/wait-for-interface.sh /usr/local/bin/campus-endpoint
+RUN chmod 0755 \
+        /usr/local/lib/campus/wait-for-interface.sh \
+        /usr/local/bin/campus-dhcp-client \
+        /usr/local/bin/campus-endpoint
 
 ENTRYPOINT ["/usr/local/bin/campus-endpoint"]

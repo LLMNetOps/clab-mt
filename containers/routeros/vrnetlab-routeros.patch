@@ -1,0 +1,22 @@
+--- a/docker/Dockerfile
++++ b/docker/Dockerfile
+@@ -1 +1 @@
+-FROM ghcr.io/srl-labs/vrnetlab-base:0.3.0
++FROM ghcr.io/srl-labs/vrnetlab-base:0.3.0@sha256:57f36ae1cf44a78a6b2cad35a6276565c56edfd28e8160ae9a772929db28fd6d
+@@ -4,6 +4,12 @@
+-RUN apt-get update -qy \
++RUN sed -i \
++   -e 's|http://deb.debian.org/debian-security|https://snapshot.debian.org/archive/debian-security/20260610T000000Z/|g' \
++   -e 's|http://deb.debian.org/debian|https://snapshot.debian.org/archive/debian/20260610T000000Z/|g' \
++   -e '/^Signed-By:/a Check-Valid-Until: no' \
++   /etc/apt/sources.list.d/debian.sources \
++   && apt-get update -qy \
+    && apt-get install -y --no-install-recommends \
+-   qemu-system-x86 \
+-   qemu-efi-aarch64 \
+-   ftp \
++   qemu-system-x86=1:10.0.8+ds-0+deb13u1+b2 \
++   qemu-efi-aarch64=2025.02-8+deb13u1 \
++   ftp=20230507-2 \
++   tnftp=20230507-2+b1 \
+    && rm -rf /var/lib/apt/lists/*

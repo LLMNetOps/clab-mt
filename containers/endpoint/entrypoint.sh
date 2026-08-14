@@ -11,4 +11,4 @@ ip link set "$interface" up
 # Containerlab's management interface supplies a Docker default route. The
 # endpoint's data-plane default must instead come from campus DHCP on eth1.
 ip -4 route flush default
-exec dhclient -4 -d -v "$interface"
+DHCP_INTERFACE="$interface" exec /usr/local/bin/campus-dhcp-client supervise

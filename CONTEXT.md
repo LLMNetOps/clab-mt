@@ -2,6 +2,12 @@
 
 This context describes a miniature campus network testbed that exercises external BGP connectivity to an ISP and a research-and-education network alongside an internal OSPF network.
 
+## Lab operation
+
+**Lab operator**:
+A network engineer who prepares, deploys, validates, explores, and destroys the campus routing lab without needing knowledge of the repository's implementation.
+_Avoid_: user, when the operator role is specifically intended.
+
 ## Network roles
 
 **Campus edge**:

@@ -26,4 +26,31 @@ source tools/lib/lab.sh
 [[ "$(lab_manifest_count idren)" == 3 ]]
 [[ "$(lab_generated_route_count "$routes_fixture")" == 2 ]]
 
-echo "Generated route metadata lookups passed."
+address_attempt_file="$fixture_dir/address-attempt"
+printf '%s\n' 0 >"$address_attempt_file"
+lab_interface_ip() {
+    address_attempt=$(cat "$address_attempt_file")
+    address_attempt=$((address_attempt + 1))
+    printf '%s\n' "$address_attempt" >"$address_attempt_file"
+    if [[ "$address_attempt" == 3 ]]; then
+        printf '%s\n' 10.255.20.101
+    fi
+}
+sleep() {
+    :
+}
+
+[[ "$(lab_wait_for_interface_ip clab-campus-ebgp-H2 eth1 3 0)" == 10.255.20.101 ]]
+
+lab_interface_ip() {
+    :
+}
+wait_error="$fixture_dir/wait-error"
+if lab_wait_for_interface_ip clab-campus-ebgp-H2 eth1 2 0 2>"$wait_error"; then
+    echo "Address wait unexpectedly succeeded without an address" >&2
+    exit 1
+fi
+grep -F "lab: clab-campus-ebgp-H2:eth1 has no IPv4 address after 2 attempts" \
+    "$wait_error" >/dev/null
+
+echo "Generated route metadata and address waits passed."

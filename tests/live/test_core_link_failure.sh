@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-root_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root_dir=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 cd "$root_dir"
 
 path_attempts=${CORE_PATH_ATTEMPTS:-25}
 path_interval=${CORE_PATH_INTERVAL:-2}
-r2_data_interface=${R2_R3_CONTAINER_INTERFACE:-eth2}
 link_disabled=false
 
-LAB_CONTEXT="core-link failure"
+LAB_CONTEXT="core-link failure test"
 source tools/lib/lab.sh
 
 trace_hops() {
@@ -57,32 +56,17 @@ assert_ping() {
 
 restore_link() {
     if [[ "$link_disabled" == true ]]; then
-        echo "Restoring the R2-R3 link during cleanup..." >&2
-        docker exec "$r2" ip link set "$r2_data_interface" up >/dev/null 2>&1 || true
+        echo "Restoring r2-r3 during cleanup..." >&2
+        bash tools/link-state.sh up r2-r3 >/dev/null 2>&1 || true
         link_disabled=false
     fi
 }
 trap restore_link EXIT
 
-r2=$(lab_require_running R2)
+bash tools/link-state.sh status r2-r3 >/dev/null
 h1=$(lab_require_running H1)
 h2=$(lab_require_running H2)
-
-if ! docker exec "$r2" ip link show dev "$r2_data_interface" >/dev/null 2>&1; then
-    echo "core-link failure: $r2_data_interface is not present on $r2" >&2
-    exit 1
-fi
-
-h2_ip=""
-for _attempt in $(seq 1 30); do
-    h2_ip=$(lab_interface_ip "$h2")
-    [[ -n "$h2_ip" ]] && break
-    sleep 1
-done
-if [[ -z "$h2_ip" ]]; then
-    echo "core-link failure: H2 has no DHCP address on eth1" >&2
-    exit 1
-fi
+h2_ip=$(lab_wait_for_interface_ip "$h2" eth1 30 1)
 
 normal_path="10.255.10.1 10.255.1.6 $h2_ip"
 rerouted_path="10.255.10.1 10.255.1.1 10.255.1.10 $h2_ip"
@@ -90,18 +74,16 @@ rerouted_path="10.255.10.1 10.255.1.1 10.255.1.10 $h2_ip"
 assert_ping "Normal R2-R3"
 assert_path "Normal R2-R3" "$normal_path"
 
-echo "Disabling the R2-R3 link ($r2:$r2_data_interface / RouterOS ether3)..."
-docker exec "$r2" ip link set "$r2_data_interface" down
+bash tools/link-state.sh down r2-r3
 link_disabled=true
 
 assert_path "Rerouted R2-R1-R3" "$rerouted_path"
 assert_ping "Rerouted R2-R1-R3"
 
-echo "Restoring the R2-R3 link..."
-docker exec "$r2" ip link set "$r2_data_interface" up
+bash tools/link-state.sh up r2-r3
 link_disabled=false
 
 assert_path "Restored R2-R3" "$normal_path"
 assert_ping "Restored R2-R3"
 
-echo "Core-link failure scenario passed."
+echo "Core-link failure test passed."

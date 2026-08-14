@@ -53,6 +53,27 @@ lab_interface_ip() {
         "ip -4 -o addr show dev '$interface' | awk '\$4 !~ /^169\\.254/ {sub(\"/.*\", \"\", \$4); print \$4; exit}' 2>/dev/null || true"
 }
 
+lab_wait_for_interface_ip() {
+    local container=$1
+    local interface=${2:-eth1}
+    local attempts=${3:-30}
+    local interval=${4:-1}
+    local address=""
+    local attempt
+
+    for attempt in $(seq 1 "$attempts"); do
+        address=$(lab_interface_ip "$container" "$interface")
+        if [[ -n "$address" ]]; then
+            printf '%s\n' "$address"
+            return 0
+        fi
+        sleep "$interval"
+    done
+
+    echo "$LAB_CONTEXT: $container:$interface has no IPv4 address after $attempts attempts" >&2
+    return 1
+}
+
 lab_routeros_command() {
     local node=$1
     local command=$2

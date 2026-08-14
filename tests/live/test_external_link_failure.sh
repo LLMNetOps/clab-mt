@@ -1,16 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-root_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+root_dir=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 cd "$root_dir"
 
 bgp_attempts=${BGP_STATE_ATTEMPTS:-25}
 bgp_recovery_attempts=${BGP_RECOVERY_ATTEMPTS:-90}
 bgp_interval=${BGP_STATE_INTERVAL:-2}
-edge=""
-disabled_interface=""
+disabled_link=""
 
-LAB_CONTEXT="external-link failure"
+LAB_CONTEXT="external-link failure test"
 source tools/lib/lab.sh
 
 received_route_count() {
@@ -51,17 +50,17 @@ speaker_pid() {
 }
 
 restore_external_link() {
-    if [[ -n "$disabled_interface" && -n "$edge" ]]; then
-        echo "Restoring $edge:$disabled_interface during cleanup..." >&2
-        docker exec "$edge" ip link set "$disabled_interface" up >/dev/null 2>&1 || true
-        disabled_interface=""
+    if [[ -n "$disabled_link" ]]; then
+        echo "Restoring $disabled_link during cleanup..." >&2
+        bash tools/link-state.sh up "$disabled_link" >/dev/null 2>&1 || true
+        disabled_link=""
     fi
 }
 trap restore_external_link EXIT
 
-flap_peer() {
+test_peer_failure() {
     local node=$1
-    local edge_interface=$2
+    local link=$2
     local peer_address=$3
     local expected_prefixes=$4
     local pid_before pid_after
@@ -70,20 +69,18 @@ flap_peer() {
     assert_received_route_count "$node baseline" "$peer_address" "$expected_prefixes"
     pid_before=$(speaker_pid "$node")
     if [[ -z "$pid_before" ]]; then
-        echo "$node ExaBGP process is not running before the link flap" >&2
+        echo "$node ExaBGP process is not running before the link failure" >&2
         exit 1
     fi
 
-    echo "Disabling the R1-$node link ($edge:$edge_interface)..."
-    docker exec "$edge" ip link set "$edge_interface" down
-    disabled_interface=$edge_interface
+    bash tools/link-state.sh down "$link"
+    disabled_link=$link
 
     assert_received_route_count "$node withdrawal" "$peer_address" 0
     bash tools/validate.sh reachability-only
 
-    echo "Restoring the R1-$node link..."
-    docker exec "$edge" ip link set "$edge_interface" up
-    disabled_interface=""
+    bash tools/link-state.sh up "$link"
+    disabled_link=""
 
     assert_received_route_count "$node recovery" "$peer_address" "$expected_prefixes" "$bgp_recovery_attempts"
     pid_after=$(speaker_pid "$node")
@@ -95,8 +92,8 @@ flap_peer() {
     bash tools/validate.sh reachability-only
 }
 
-edge=$(lab_require_running R1)
-flap_peer ISP eth3 10.255.2.2 "$(lab_manifest_count isp)"
-flap_peer IDREN eth4 10.255.2.6 "$(lab_manifest_count idren)"
+lab_require_running R1 >/dev/null
+test_peer_failure ISP isp 10.255.2.2 "$(lab_manifest_count isp)"
+test_peer_failure IDREN idren 10.255.2.6 "$(lab_manifest_count idren)"
 
-echo "External-link failure scenarios passed."
+echo "External-link failure tests passed."
