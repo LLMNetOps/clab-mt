@@ -1,3 +1,4 @@
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -6,6 +7,19 @@ from tools.render_routeros import render_configs
 
 
 class RouterOsRendererTests(unittest.TestCase):
+    def _render_repository_edge_config(self) -> str:
+        repository_config_dir = Path(__file__).parents[1] / "configs" / "routeros"
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_dir = Path(temp_dir)
+            for template_name in ("r1.rsc.tmpl", "core.rsc.tmpl"):
+                shutil.copy2(
+                    repository_config_dir / template_name,
+                    config_dir / template_name,
+                )
+            render_configs(config_dir)
+            return (config_dir / "r1.rsc").read_text(encoding="utf-8")
+
     def test_checked_in_startup_configs_do_not_change_login_credentials(self):
         config_dir = Path(__file__).parents[1] / "configs" / "routeros"
 
@@ -56,6 +70,48 @@ class RouterOsRendererTests(unittest.TestCase):
                 "lan=10.255.20.1/24 10.255.20.0/24 "
                 "10.255.20.100-10.255.20.199\n",
             )
+
+    def test_edge_exports_only_a_default_route_into_campus_ospf(self):
+        edge_config = self._render_repository_edge_config()
+
+        self.assertIn("originate-default=never", edge_config)
+        self.assertIn("out-filter-chain=ospf-default", edge_config)
+        self.assertNotIn("redistribute=bgp", edge_config)
+        self.assertIn(
+            'chain=ospf-default rule="if (dst == 0.0.0.0/0) { '
+            "set ospf-ext-type type1; set ospf-ext-metric 20; accept } "
+            'else { reject }"',
+            edge_config,
+        )
+
+    def test_edge_default_origination_follows_the_isp_bgp_session(self):
+        edge_config = self._render_repository_edge_config()
+
+        self.assertIn(
+            "add name=sync-isp-ospf-default dont-require-permissions=no "
+            "policy=read,write source={",
+            edge_config,
+        )
+        self.assertIn(
+            "remote.address=10.255.2.2 and established",
+            edge_config,
+        )
+        self.assertNotIn(
+            "remote.address=10.255.2.6 and established",
+            edge_config,
+        )
+        self.assertIn(':set desired "always"', edge_config)
+        self.assertIn("originate-default=$desired", edge_config)
+        self.assertIn(
+            "add name=sync-isp-default-startup start-time=startup interval=0s "
+            "on-event=sync-isp-ospf-default policy=read,write",
+            edge_config,
+        )
+        self.assertIn(
+            "add name=sync-isp-default-periodic interval=2s "
+            "on-event=sync-isp-ospf-default policy=read,write",
+            edge_config,
+        )
 
 
 if __name__ == "__main__":

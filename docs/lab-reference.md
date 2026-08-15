@@ -17,6 +17,14 @@
 | H2 LAN | `10.255.20.0/24` | R3 gateway `.1`, DHCP `.100–.199` |
 | Generated routes | `10.64.0.0/10` | Control plane only |
 
+## Routing behavior
+
+R1 retains the generated ISP and IDREN routes in BGP and does not redistribute
+them into OSPF. While the R1–ISP BGP session is established, R1 originates
+`0.0.0.0/0` into OSPF as external type 1 with metric 20. The default is
+withdrawn when ISP is unavailable even if IDREN remains established. Neither
+external speaker advertises a default or provides data-plane forwarding.
+
 ## Route generation
 
 The default generated advertisement set is deterministic:

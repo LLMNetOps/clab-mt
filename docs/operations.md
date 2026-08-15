@@ -20,8 +20,15 @@ make validate
 ```
 
 The full validation checks H1-to-H2 traffic, both external BGP sessions,
-received route counts, OSPF neighbors, shared-prefix preference, and OSPF
-external-route propagation.
+received route counts, OSPF neighbors, shared-prefix preference on R1, and the
+ISP-gated OSPF default on R2 and R3. It also verifies that generated BGP
+prefixes are not installed there as exact OSPF routes.
+
+R1 checks the ISP BGP session every two seconds and originates the default only
+while that session is established. A query error disables origination, but a
+stopped scheduler can leave its last setting in place. IDREN session state has
+no effect on the default, and the default is a control-plane signal rather than
+a working Internet path through the ExaBGP speakers.
 
 The validation tool also has limited modes:
 
@@ -114,6 +121,19 @@ make link-up LINK=isp
 The link tool makes only the requested change. It does not restore a disabled
 link automatically.
 
+## Restart a campus router
+
+Request a native RouterOS reboot without restarting its Containerlab wrapper:
+
+```bash
+bash tools/restart-router.sh R1
+```
+
+The helper intentionally supports only R1 because it exists for the
+ISP-unavailable restart scenario. A Docker-level container restart is not
+equivalent: the vrnetlab wrapper expects Containerlab to provision its
+data-plane interfaces before it launches the RouterOS VM.
+
 ## Run automated failure tests
 
 Run:
@@ -126,8 +146,11 @@ The tests are under `tests/live/`. They use the same link-control tool as the
 manual commands.
 
 The external-link test disables and restores the ISP link, and then disables
-and restores the IDREN link. It verifies route withdrawal, recovery, endpoint
-reachability, and ExaBGP process continuity.
+and restores the IDREN link. It verifies that ISP failure withdraws the OSPF
+default while IDREN failure does not, along with BGP route withdrawal,
+recovery, endpoint reachability, and ExaBGP process continuity. It then keeps
+the ISP data interface down while restarting R1 and verifies that the
+converged campus core has no default until ISP recovers.
 
 The campus-core test disables the R2–R3 link. It verifies that H1-to-H2 traffic
 moves from R2–R3 to R2–R1–R3. It then restores the link and verifies the normal

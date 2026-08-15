@@ -25,10 +25,10 @@ The local autonomous system represented by R1 for external BGP connectivity; in 
 A generated IPv4 route intentionally advertised by both ISP and IDREN so the campus edge can demonstrate BGP best-path selection and policy.
 
 **ISP**:
-An ExaBGP-speaking external autonomous system with AS 7713 that advertises generated test prefixes toward R1.
+An ExaBGP-speaking external autonomous system with AS 7713 that advertises generated test prefixes toward R1. Its external BGP session is the lab's signal that R1 may originate the ISP-gated OSPF default.
 
 **IDREN**:
-An ExaBGP-speaking research-and-education external autonomous system with AS 64302 that advertises generated test prefixes toward R1, including prefixes associated with directly connected customer autonomous systems and AS paths containing 141682.
+An ExaBGP-speaking research-and-education external autonomous system with AS 64302 that advertises generated test prefixes toward R1, including prefixes associated with directly connected customer autonomous systems and AS paths containing 141682. IDREN availability does not qualify R1 to originate the ISP-gated OSPF default.
 
 **ExaBGP speaker**:
 A Linux-based external BGP peer that emits the lab’s generated advertisements without acting as a forwarding router.
@@ -48,11 +48,11 @@ The R1 policy that assigns local preference to received external routes; this la
 **Internal OSPF domain**:
 The single campus routing domain formed by R1, R2, and R3.
 
-**External-route propagation**:
-The campus behavior in which R1 makes externally learned BGP routes available to the internal OSPF domain.
+**ISP-gated OSPF default**:
+The sole external route R1 originates into the internal OSPF domain. It is present only while R1's external BGP session with ISP is established; the IDREN session does not qualify it.
 
 **Test prefix**:
-An IPv4 route generated for the lab to exercise advertisement, path selection, policy, and reachability; generated prefixes may range from /16 through /24.
+An IPv4 route generated for the lab to exercise advertisement, path selection, and policy on R1; generated prefixes may range from /16 through /24.
 
 **Generated AS path**:
 The synthetic AS_SEQUENCE attached to a test prefix so the lab can exercise realistic-looking path selection without requiring additional autonomous-system nodes.
@@ -67,7 +67,7 @@ One of up to fifty synthetic autonomous systems represented by IDREN through AS 
 The bounded collection of generated test prefixes an external peer advertises during a lab run: up to 500 from ISP and up to 200 from IDREN.
 
 **Control-plane test route**:
-A generated route used to exercise BGP and OSPF behavior even when the lab does not model a reachable host behind the advertised prefix.
+A generated route used to exercise BGP behavior even when the lab does not model a reachable host behind the advertised prefix.
 
 **Prefix source category**:
 The modeled origin relationship represented in an external AS path, such as a directly connected IDREN AS, an IDREN path through 141682, or a generated ISP upstream path.
@@ -110,8 +110,8 @@ The endpoint acceptance test in which H1 and H2 receive DHCP configuration and c
   `vrnetlab/mikrotik_routeros:7.21.5`.
 - ISP and IDREN use ExaBGP `5.0.9`; their generated advertisements are static
   control-plane routes, not forwarding destinations.
-- The triangle uses OSPFv2 area 0. R1 redistributes accepted generated BGP
-  routes as external type 1 with metric 20.
+- The triangle uses OSPFv2 area 0. R1 originates the ISP-gated OSPF default as
+  external type 1 with metric 20 and does not redistribute generated BGP routes.
 - H1 is on R2's `10.255.10.0/24` DHCP-served segment; H2 is on R3's
   `10.255.20.0/24` DHCP-served segment.
 - The generated-prefix pool is `10.64.0.0/10`; infrastructure and endpoint

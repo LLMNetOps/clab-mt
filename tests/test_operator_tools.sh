@@ -31,12 +31,21 @@ grep -F "qemu-efi-aarch64-package: 2025.02-8+deb13u1" \
 grep -F "qemu-system-x86-package: 1:10.0.8+ds-0+deb13u1+b2" \
     <<<"$routeros_inputs" >/dev/null
 bash tools/link-state.sh --help | grep -F "r2-r3|isp|idren" >/dev/null
+bash tools/restart-router.sh --help | grep -F "Usage: tools/restart-router.sh R1" >/dev/null
 bash tools/traffic.sh --help | grep -F "Send ICMP traffic" >/dev/null
 bash tools/dhcp-client.sh --help | grep -F "H1|H2" >/dev/null
 sh containers/endpoint/dhcp-client.sh --help | grep -F "status|release|renew" >/dev/null
 
 if bash tools/link-state.sh down unknown >/dev/null 2>&1; then
     echo "link-state accepted an unknown link" >&2
+    exit 1
+fi
+if bash tools/restart-router.sh H1 >/dev/null 2>&1; then
+    echo "restart-router accepted an endpoint host" >&2
+    exit 1
+fi
+if bash tools/restart-router.sh R2 >/dev/null 2>&1; then
+    echo "restart-router accepted an out-of-scope campus router" >&2
     exit 1
 fi
 if bash tools/traffic.sh --count invalid >/dev/null 2>&1; then

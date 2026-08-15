@@ -69,5 +69,7 @@ make failure-tests
 ```
 
 These tests need a healthy deployed lab. They disable and restore the ISP,
-IDREN, and R2–R3 links. Do not run them while another lab operator is changing
-the same lab.
+IDREN, and R2–R3 links and restart R1 once while the ISP data interface is
+unavailable. The external-link test verifies that only ISP session state gates
+the OSPF default. Do not run them while another lab operator is changing the
+same lab.

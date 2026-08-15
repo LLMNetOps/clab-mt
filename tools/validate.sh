@@ -60,7 +60,7 @@ validate_endpoints() {
 }
 
 validate_control_plane() {
-    local bgp_sessions expected_isp expected_idren shared_prefix shared_lsa_id route_output lsa_output
+    local bgp_sessions expected_isp expected_idren shared_prefix route_output lsa_output
 
     lab_require_running R1 >/dev/null
     lab_require_running R2 >/dev/null
@@ -114,24 +114,28 @@ print(next(route["prefix"] for route in manifest["routes"]["isp"] if route["shar
     echo "IDREN local preference verified for shared prefix $shared_prefix."
 
     for node in R2 R3; do
-        route_output=$(lab_routeros_command "$node" "/routing/route/print detail where dst-address=$shared_prefix" | tr -d '\r')
+        route_output=$(lab_routeros_command "$node" "/routing/route/print detail where dst-address=0.0.0.0/0" | tr -d '\r')
         grep -Eq '^[[:space:]]*Ao[[:space:]]' <<<"$route_output" || {
-            echo "validation: $node has no active OSPF route for $shared_prefix" >&2
+            echo "validation: $node has no active OSPF default route" >&2
             exit 1
         }
         grep -Fq '.type=ext-type-1' <<<"$route_output" || {
-            echo "validation: $node route for $shared_prefix is not OSPF external type 1" >&2
+            echo "validation: $node default route is not OSPF external type 1" >&2
+            exit 1
+        }
+        assert_equal "$node external OSPF route count" 1 "$(lab_routeros_numeric_output "$node" "/routing/route/print count-only where belongs-to=campus-ospf and (ospf.type=ext-type-1 or ospf.type=ext-type-2)")"
+        assert_equal "$node exact route for generated prefix" 0 "$(lab_routeros_numeric_output "$node" "/routing/route/print count-only where dst-address=$shared_prefix")"
+    done
+
+    for node in R1 R2 R3; do
+        assert_equal "$node external OSPF LSA count" 1 "$(lab_routeros_numeric_output "$node" "/routing/ospf/lsa/print count-only where type=external")"
+        lsa_output=$(lab_routeros_command "$node" "/routing/ospf/lsa/print detail where type=external and id=0.0.0.0" | tr -d '\r')
+        grep -Fq 'metric=20 type-1' <<<"$lsa_output" || {
+            echo "validation: $node has no OSPF external type 1 default LSA with metric 20" >&2
             exit 1
         }
     done
-
-    shared_lsa_id=${shared_prefix%/*}
-    lsa_output=$(lab_routeros_command R1 "/routing/ospf/lsa/print detail where type=external and id=$shared_lsa_id" | tr -d '\r')
-    grep -Fq 'metric=20 type-1' <<<"$lsa_output" || {
-        echo "validation: R1 does not advertise $shared_prefix as OSPF external type 1 with metric 20" >&2
-        exit 1
-    }
-    echo "OSPF external type 1 metric 20 verified for shared prefix $shared_prefix."
+    echo "ISP-gated OSPF external type 1 default metric 20 verified."
 }
 
 case "$mode" in
