@@ -8,8 +8,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping
 
-ISP_LOCAL_PREF = 100
-IDREN_LOCAL_PREF = 200
+ADJACENT_ORIGIN_LOCAL_PREF = 200
+ISP_TRANSIT_LEARNED_LOCAL_PREF = 160
+REN_TRANSIT_LEARNED_LOCAL_PREF = 180
 
 
 @dataclass(frozen=True)
@@ -90,8 +91,13 @@ def render_configs(config_dir: Path = Path("configs/routeros")) -> None:
         config_dir / "r1.rsc.tmpl",
         config_dir / "r1.rsc",
         {
-            "ISP_LOCAL_PREF": str(ISP_LOCAL_PREF),
-            "IDREN_LOCAL_PREF": str(IDREN_LOCAL_PREF),
+            "ADJACENT_ORIGIN_LOCAL_PREF": str(ADJACENT_ORIGIN_LOCAL_PREF),
+            "ISP_TRANSIT_LEARNED_LOCAL_PREF": str(
+                ISP_TRANSIT_LEARNED_LOCAL_PREF
+            ),
+            "REN_TRANSIT_LEARNED_LOCAL_PREF": str(
+                REN_TRANSIT_LEARNED_LOCAL_PREF
+            ),
         },
     )
 
@@ -116,7 +122,9 @@ def main() -> int:
     render_configs(args.config_dir)
     print(
         f"rendered R1/R2/R3 configs in {args.config_dir} "
-        f"with ISP local-pref={ISP_LOCAL_PREF}, IDREN local-pref={IDREN_LOCAL_PREF}"
+        f"with adjacent-origin local-pref={ADJACENT_ORIGIN_LOCAL_PREF}, "
+        f"ISP transit-learned local-pref={ISP_TRANSIT_LEARNED_LOCAL_PREF}, "
+        f"REN transit-learned local-pref={REN_TRANSIT_LEARNED_LOCAL_PREF}"
     )
     return 0
 

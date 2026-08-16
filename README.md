@@ -3,7 +3,7 @@
 This repository deploys a small campus routing lab with Containerlab.
 
 R1 is the **campus edge**. R1, R2, and R3 form the OSPF **campus core**.
-R1 also has external BGP sessions with ISP and IDREN. H1 and H2 receive
+R1 also has external BGP sessions with ISP and REN. H1 and H2 receive
 addresses through DHCP.
 
 ![Containerlab campus eBGP topology](campus-ebgp.svg)
@@ -11,15 +11,16 @@ addresses through DHCP.
 The lab demonstrates:
 
 - OSPF routing and convergence in the campus core.
-- External BGP sessions with ISP and IDREN.
-- IDREN preference for a shared test prefix.
+- External BGP sessions with a commercial ISP and a non-commercial REN.
+- Standard BGP communities emitted by the external speakers and interpreted
+  by R1 for local preference.
 - Conditional propagation of an ISP-gated default into OSPF.
 - Endpoint traffic during normal and failed-link conditions.
 
 The generated BGP prefixes are control-plane test routes. There is no host or
 service behind these prefixes, and R1 does not redistribute them into OSPF.
 Instead, R1 originates an OSPF default while its ISP BGP session is
-established. IDREN availability alone does not qualify the default, and the
+established. REN availability alone does not qualify the default, and the
 default does not provide Internet forwarding through the ExaBGP speakers.
 
 ## Requirements
@@ -79,7 +80,7 @@ make link-down LINK=r2-r3
 make link-up LINK=r2-r3
 ```
 
-Valid link names are `r2-r3`, `isp`, and `idren`. A link that you disable
+Valid link names are `r2-r3`, `isp`, and `ren`. A link that you disable
 stays disabled until you restore it or destroy the lab.
 
 Inspect, release, and renew DHCP on an endpoint host:

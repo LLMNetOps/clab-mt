@@ -12,7 +12,7 @@ trap cleanup EXIT
 
 manifest_fixture="$fixture_dir/manifest.json"
 routes_fixture="$fixture_dir/routes.conf"
-printf '%s\n' '{"counts":{"isp":7,"idren":3}}' >"$manifest_fixture"
+printf '%s\n' '{"counts":{"isp":7,"ren":3}}' >"$manifest_fixture"
 printf '%s\n' \
     '        route 10.64.0.0/16 next-hop self;' \
     '        route 10.65.0.0/16 {' \
@@ -23,7 +23,7 @@ LAB_MANIFEST_PATH=$manifest_fixture
 source tools/lib/lab.sh
 
 [[ "$(lab_manifest_count isp)" == 7 ]]
-[[ "$(lab_manifest_count idren)" == 3 ]]
+[[ "$(lab_manifest_count ren)" == 3 ]]
 [[ "$(lab_generated_route_count "$routes_fixture")" == 2 ]]
 
 address_attempt_file="$fixture_dir/address-attempt"

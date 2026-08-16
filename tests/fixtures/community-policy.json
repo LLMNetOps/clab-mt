@@ -1,0 +1,65 @@
+[
+  {
+    "name": "empty-community-fallback",
+    "peer": "isp",
+    "communities": [],
+    "expected": "accept",
+    "local_pref": 100
+  },
+  {
+    "name": "isp-adjacent-origin",
+    "peer": "isp",
+    "communities": ["65000:10", "65000:0"],
+    "expected": "accept",
+    "local_pref": 200
+  },
+  {
+    "name": "ren-adjacent-origin",
+    "peer": "ren",
+    "communities": ["65000:20", "65000:0"],
+    "expected": "accept",
+    "local_pref": 200
+  },
+  {
+    "name": "isp-transit-learned",
+    "peer": "isp",
+    "communities": ["65000:10", "65000:99"],
+    "expected": "accept",
+    "local_pref": 160
+  },
+  {
+    "name": "ren-transit-learned",
+    "peer": "ren",
+    "communities": ["65000:20", "65000:99"],
+    "expected": "accept",
+    "local_pref": 180
+  },
+  {
+    "name": "peer-mismatched-source",
+    "peer": "ren",
+    "communities": ["65000:10", "65000:0"],
+    "expected": "reject",
+    "local_pref": null
+  },
+  {
+    "name": "contradictory-source",
+    "peer": "isp",
+    "communities": ["65000:10", "65000:20"],
+    "expected": "reject",
+    "local_pref": null
+  },
+  {
+    "name": "unexpected-extra-community",
+    "peer": "isp",
+    "communities": ["65000:10", "65000:0", "65000:123"],
+    "expected": "reject",
+    "local_pref": null
+  },
+  {
+    "name": "missing-path-class",
+    "peer": "ren",
+    "communities": ["65000:20"],
+    "expected": "reject",
+    "local_pref": null
+  }
+]

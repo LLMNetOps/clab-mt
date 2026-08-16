@@ -10,7 +10,7 @@ source tools/lib/links.sh
 
 usage() {
     cat <<EOF
-Usage: $0 <status|down|up> <r2-r3|isp|idren>
+Usage: $0 <status|down|up> <r2-r3|isp|ren>
        $0 list
 
 Show, disable, or restore one data-plane link in the deployed lab.

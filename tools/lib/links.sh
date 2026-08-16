@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 lab_link_names() {
-    printf '%s\n' r2-r3 isp idren
+    printf '%s\n' r2-r3 isp ren
 }
 
 lab_link_target() {
@@ -12,8 +12,8 @@ lab_link_target() {
         isp)
             printf '%s|%s|%s\n' R1 eth3 'R1:ether4 - ISP:eth1'
             ;;
-        idren)
-            printf '%s|%s|%s\n' R1 eth4 'R1:ether5 - IDREN:eth1'
+        ren)
+            printf '%s|%s|%s\n' R1 eth4 'R1:ether5 - REN:eth1'
             ;;
         *)
             return 1

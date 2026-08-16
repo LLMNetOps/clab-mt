@@ -49,12 +49,12 @@ topology:
         DATA_ADDRESS: 10.255.2.2/30
       cmd: /etc/exabgp/exabgp.conf
 
-    IDREN:
+    REN:
       kind: linux
       image: local/campus-exabgp:5.0.9
       mgmt-ipv4: 172.20.20.22
       binds:
-        - generated/idren.conf:/etc/exabgp/exabgp.conf:ro
+        - generated/ren.conf:/etc/exabgp/exabgp.conf:ro
       env:
         DATA_INTERFACE: eth1
         DATA_ADDRESS: 10.255.2.6/30
@@ -82,7 +82,7 @@ topology:
 
     # R1's external eBGP sessions.
     - endpoints: [ "R1:ether4", "ISP:eth1" ]
-    - endpoints: [ "R1:ether5", "IDREN:eth1" ]
+    - endpoints: [ "R1:ether5", "REN:eth1" ]
 
     # DHCP-served campus LANs.
     - endpoints: [ "R2:ether4", "H1:eth1" ]

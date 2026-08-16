@@ -11,7 +11,7 @@ add address=10.255.0.1/32 interface=lo comment="R1 loopback"
 add address=10.255.1.1/30 interface=ether2 comment="R1-R2"
 add address=10.255.1.9/30 interface=ether3 comment="R1-R3"
 add address=10.255.2.1/30 interface=ether4 comment="R1-ISP"
-add address=10.255.2.5/30 interface=ether5 comment="R1-IDREN"
+add address=10.255.2.5/30 interface=ether5 comment="R1-REN"
 
 # One OSPFv2 area; only the triangle participates in adjacency formation.
 /routing ospf instance
@@ -30,17 +30,29 @@ add chain=ospf-default rule="if (dst == 0.0.0.0/0) { set ospf-ext-type type1; se
 /routing bgp instance
 add name=campus-bgp as=65000 router-id=10.255.0.1
 
-# Inbound policy is applied on R1.  IDREN wins shared prefixes locally.
-/routing filter rule
-add chain=bgp-in-isp rule="if (dst in 10.64.0.0/10 && dst-len >= 16 && dst-len <= 24) { set bgp-local-pref {{ISP_LOCAL_PREF}}; accept } else { reject }"
-add chain=bgp-in-idren rule="if (dst in 10.64.0.0/10 && dst-len >= 16 && dst-len <= 24) { set bgp-local-pref {{IDREN_LOCAL_PREF}}; accept } else { reject }"
+# Inbound policy is applied on R1.  Empty communities retain RouterOS's
+# default local preference; exact lab community sets receive explicit values.
+/routing/filter/community-list
+add list=community-isp-adjacent-origin communities=65000:10,65000:0
+add list=community-isp-transit-learned communities=65000:10,65000:99
+add list=community-ren-adjacent-origin communities=65000:20,65000:0
+add list=community-ren-transit-learned communities=65000:20,65000:99
+/routing/filter/rule
+add chain=bgp-in-isp rule="if (dst in 10.64.0.0/10 && dst-len >= 16 && dst-len <= 24 && bgp-communities-empty) { accept }"
+add chain=bgp-in-isp rule="if (dst in 10.64.0.0/10 && dst-len >= 16 && dst-len <= 24 && bgp-communities equal-list community-isp-adjacent-origin) { set bgp-local-pref {{ADJACENT_ORIGIN_LOCAL_PREF}}; accept }"
+add chain=bgp-in-isp rule="if (dst in 10.64.0.0/10 && dst-len >= 16 && dst-len <= 24 && bgp-communities equal-list community-isp-transit-learned) { set bgp-local-pref {{ISP_TRANSIT_LEARNED_LOCAL_PREF}}; accept }"
+add chain=bgp-in-isp rule="reject"
+add chain=bgp-in-ren rule="if (dst in 10.64.0.0/10 && dst-len >= 16 && dst-len <= 24 && bgp-communities-empty) { accept }"
+add chain=bgp-in-ren rule="if (dst in 10.64.0.0/10 && dst-len >= 16 && dst-len <= 24 && bgp-communities equal-list community-ren-adjacent-origin) { set bgp-local-pref {{ADJACENT_ORIGIN_LOCAL_PREF}}; accept }"
+add chain=bgp-in-ren rule="if (dst in 10.64.0.0/10 && dst-len >= 16 && dst-len <= 24 && bgp-communities equal-list community-ren-transit-learned) { set bgp-local-pref {{REN_TRANSIT_LEARNED_LOCAL_PREF}}; accept }"
+add chain=bgp-in-ren rule="reject"
 add chain=bgp-out-campus rule="if (dst == 10.255.10.0/24 || dst == 10.255.20.0/24) { accept } else { reject }"
 
 /routing bgp connection
-add name=to-isp instance=campus-bgp remote.address=10.255.2.2 remote.as=7713 local.address=10.255.2.1 local.role=ebgp tcp-md5-key="campus-isp-ebgp" connect=yes listen=yes hold-time=30s afi=ip input.filter=bgp-in-isp input.limit-process-routes-ipv4=1000 output.redistribute=ospf output.filter-chain=bgp-out-campus
-add name=to-idren instance=campus-bgp remote.address=10.255.2.6 remote.as=64302 local.address=10.255.2.5 local.role=ebgp tcp-md5-key="campus-idren-ebgp" connect=yes listen=yes hold-time=30s afi=ip input.filter=bgp-in-idren input.limit-process-routes-ipv4=1000 output.redistribute=ospf output.filter-chain=bgp-out-campus
+add name=to-isp instance=campus-bgp remote.address=10.255.2.2 remote.as=65001 local.address=10.255.2.1 local.role=ebgp tcp-md5-key="campus-isp-ebgp" connect=yes listen=yes hold-time=30s afi=ip input.filter=bgp-in-isp input.limit-process-routes-ipv4=1000 output.redistribute=ospf output.filter-chain=bgp-out-campus
+add name=to-ren instance=campus-bgp remote.address=10.255.2.6 remote.as=65002 local.address=10.255.2.5 local.role=ebgp tcp-md5-key="campus-ren-ebgp" connect=yes listen=yes hold-time=30s afi=ip input.filter=bgp-in-ren input.limit-process-routes-ipv4=1000 output.redistribute=ospf output.filter-chain=bgp-out-campus
 
-# Track the ISP BGP FSM directly; IDREN does not qualify as Internet default.
+# Track the ISP BGP FSM directly; REN does not qualify as Internet default.
 /system script
 add name=sync-isp-ospf-default dont-require-permissions=no policy=read,write source={
     :local ospfInstances [/routing/ospf/instance find where name="campus-ospf"]

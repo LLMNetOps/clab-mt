@@ -127,10 +127,10 @@ assert_routeros_unavailable() {
 external_peer_scenario() {
     case $1 in
         ISP)
-            printf '%s\n' 'isp|10.255.2.2|IDREN|10.255.2.6'
+            printf '%s\n' 'isp|10.255.2.2|REN|10.255.2.6'
             ;;
-        IDREN)
-            printf '%s\n' 'idren|10.255.2.6|ISP|10.255.2.2'
+        REN)
+            printf '%s\n' 'ren|10.255.2.6|ISP|10.255.2.2'
             ;;
         *)
             return 1
@@ -155,11 +155,11 @@ restore_external_link() {
 trap restore_external_link EXIT
 
 test_r1_restart_without_isp() {
-    local idren_prefixes
+    local ren_prefixes
 
     lab_require_running ISP >/dev/null
     lab_require_running R1 >/dev/null
-    idren_prefixes=$(lab_manifest_count idren)
+    ren_prefixes=$(lab_manifest_count ren)
 
     bash tools/link-state.sh down isp
     disabled_link=isp
@@ -170,7 +170,7 @@ test_r1_restart_without_isp() {
     assert_routeros_unavailable "R1 restart"
 
     assert_received_route_count \
-        "IDREN after R1 restart" 10.255.2.6 "$idren_prefixes" \
+        "REN after R1 restart" 10.255.2.6 "$ren_prefixes" \
         "$bgp_recovery_attempts"
     assert_full_ospf_neighbors "R1 restart"
     assert_ospf_default_state "R1 restart without ISP" absent
@@ -230,7 +230,7 @@ test_peer_failure() {
 
 lab_require_running R1 >/dev/null
 test_peer_failure ISP absent
-test_peer_failure IDREN present
+test_peer_failure REN present
 test_r1_restart_without_isp
 
 echo "External-link failure tests passed."

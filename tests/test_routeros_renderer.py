@@ -33,7 +33,9 @@ class RouterOsRendererTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             config_dir = Path(temp_dir)
             (config_dir / "r1.rsc.tmpl").write_text(
-                "ISP={{ISP_LOCAL_PREF}} IDREN={{IDREN_LOCAL_PREF}}\n",
+                "ADJACENT_ORIGIN={{ADJACENT_ORIGIN_LOCAL_PREF}} "
+                "ISP_TRANSIT_LEARNED={{ISP_TRANSIT_LEARNED_LOCAL_PREF}} "
+                "REN_TRANSIT_LEARNED={{REN_TRANSIT_LEARNED_LOCAL_PREF}}\n",
                 encoding="utf-8",
             )
             (config_dir / "core.rsc.tmpl").write_text(
@@ -50,7 +52,7 @@ class RouterOsRendererTests(unittest.TestCase):
 
             self.assertEqual(
                 (config_dir / "r1.rsc").read_text(encoding="utf-8"),
-                "ISP=100 IDREN=200\n",
+                "ADJACENT_ORIGIN=200 ISP_TRANSIT_LEARNED=160 REN_TRANSIT_LEARNED=180\n",
             )
             self.assertEqual(
                 (config_dir / "r2.rsc").read_text(encoding="utf-8"),
@@ -111,6 +113,57 @@ class RouterOsRendererTests(unittest.TestCase):
             "add name=sync-isp-default-periodic interval=2s "
             "on-event=sync-isp-ospf-default policy=read,write",
             edge_config,
+        )
+
+    def test_edge_uses_exact_standard_community_sets_for_inbound_policy(self):
+        edge_config = self._render_repository_edge_config()
+
+        self.assertIn(
+            "add list=community-isp-adjacent-origin communities=65000:10,65000:0",
+            edge_config,
+        )
+        self.assertIn(
+            "add list=community-ren-adjacent-origin communities=65000:20,65000:0",
+            edge_config,
+        )
+        self.assertIn(
+            "bgp-communities-empty) { accept }",
+            edge_config,
+        )
+        self.assertIn(
+            "bgp-communities equal-list community-isp-adjacent-origin) "
+            "{ set bgp-local-pref 200; accept }",
+            edge_config,
+        )
+        self.assertIn(
+            "bgp-communities equal-list community-ren-adjacent-origin) "
+            "{ set bgp-local-pref 200; accept }",
+            edge_config,
+        )
+        self.assertIn(
+            "bgp-communities equal-list community-isp-transit-learned) "
+            "{ set bgp-local-pref 160; accept }",
+            edge_config,
+        )
+        self.assertIn(
+            "bgp-communities equal-list community-ren-transit-learned) "
+            "{ set bgp-local-pref 180; accept }",
+            edge_config,
+        )
+        self.assertIn('add chain=bgp-in-isp rule="reject"', edge_config)
+        self.assertIn('add chain=bgp-in-ren rule="reject"', edge_config)
+
+    def test_empty_community_fallback_does_not_set_local_preference(self):
+        edge_config = self._render_repository_edge_config()
+
+        empty_rules = [
+            line
+            for line in edge_config.splitlines()
+            if "bgp-communities-empty" in line
+        ]
+        self.assertEqual(len(empty_rules), 2)
+        self.assertTrue(
+            all("set bgp-local-pref" not in line for line in empty_rules)
         )
 
 

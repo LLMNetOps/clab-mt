@@ -6,10 +6,10 @@ cd "$root_dir"
 
 source tools/lib/links.sh
 
-[[ "$(lab_link_names | paste -sd ' ' -)" == "r2-r3 isp idren" ]]
+[[ "$(lab_link_names | paste -sd ' ' -)" == "r2-r3 isp ren" ]]
 [[ "$(lab_link_target r2-r3)" == "R2|eth2|R2:ether3 - R3:ether3" ]]
 [[ "$(lab_link_target isp)" == "R1|eth3|R1:ether4 - ISP:eth1" ]]
-[[ "$(lab_link_target idren)" == "R1|eth4|R1:ether5 - IDREN:eth1" ]]
+[[ "$(lab_link_target ren)" == "R1|eth4|R1:ether5 - REN:eth1" ]]
 if lab_link_target unknown >/dev/null; then
     echo "Unknown link was accepted" >&2
     exit 1
@@ -30,7 +30,7 @@ grep -F "qemu-efi-aarch64-package: 2025.02-8+deb13u1" \
     <<<"$routeros_inputs" >/dev/null
 grep -F "qemu-system-x86-package: 1:10.0.8+ds-0+deb13u1+b2" \
     <<<"$routeros_inputs" >/dev/null
-bash tools/link-state.sh --help | grep -F "r2-r3|isp|idren" >/dev/null
+bash tools/link-state.sh --help | grep -F "r2-r3|isp|ren" >/dev/null
 bash tools/restart-router.sh --help | grep -F "Usage: tools/restart-router.sh R1" >/dev/null
 bash tools/traffic.sh --help | grep -F "Send ICMP traffic" >/dev/null
 bash tools/dhcp-client.sh --help | grep -F "H1|H2" >/dev/null
