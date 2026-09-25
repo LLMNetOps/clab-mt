@@ -1,4 +1,6 @@
+import os
 import shutil
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -19,6 +21,61 @@ class RouterOsRendererTests(unittest.TestCase):
             self.assertIn("QEMU_ADDITIONAL_ARGS", node["env"])
             self.assertIn("-accel", node["env"]["QEMU_ADDITIONAL_ARGS"])
             self.assertIn("tcg", node["env"]["QEMU_ADDITIONAL_ARGS"])
+
+    def test_build_script_uses_pre_downloaded_chr_archive(self):
+        script_path = Path(__file__).parents[1] / "tools" / "build-routeros-image.sh"
+        archive_path = Path(__file__).parents[1] / "chr-7.21.5.vmdk.zip"
+        archive_path.write_bytes(b"fake-archive")
+        self.addCleanup(archive_path.unlink, missing_ok=True)
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_dir_path = Path(temp_dir)
+            fake_bin = temp_dir_path / "bin"
+            fake_bin.mkdir()
+
+            (fake_bin / "git").write_text(
+                "#!/usr/bin/env bash\n"
+                "if [[ \"$1\" == \"clone\" ]]; then\n"
+                "  mkdir -p \"$4/mikrotik/routeros\"\n"
+                "  exit 0\n"
+                "fi\n"
+                "if [[ \"$1\" == \"-C\" ]]; then\n"
+                "  exit 0\n"
+                "fi\n"
+                "exit 0\n",
+                encoding="utf-8",
+            )
+            (fake_bin / "patch").write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+            (fake_bin / "make").write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+            (fake_bin / "unzip").write_text("#!/usr/bin/env bash\nexit 0\n", encoding="utf-8")
+            (fake_bin / "sha256sum").write_text(
+                "#!/usr/bin/env bash\n"
+                "printf '%s  %s\\n' 'acc6b562ad870116c28ce0246e99deac984d815bd9893197ee9b5897422543eb' \"$*\"\n",
+                encoding="utf-8",
+            )
+            (fake_bin / "docker").write_text(
+                "#!/usr/bin/env bash\n"
+                "if [[ \"$1\" == \"info\" ]]; then exit 0; fi\n"
+                "if [[ \"$1\" == \"image\" && \"$2\" == \"inspect\" ]]; then exit 0; fi\n"
+                "if [[ \"$1\" == \"tag\" ]]; then exit 0; fi\n"
+                "exit 0\n",
+                encoding="utf-8",
+            )
+            for path in fake_bin.iterdir():
+                path.chmod(0o755)
+
+            env = os.environ.copy()
+            env["PATH"] = f"{fake_bin}:{env['PATH']}"
+            result = subprocess.run(
+                ["bash", str(script_path), "--force", "--archive", str(archive_path)],
+                cwd=str(Path(__file__).parents[1]),
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, msg=result.stderr)
+            self.assertIn("Using pre-downloaded RouterOS", result.stdout)
 
     def _render_repository_edge_config(self) -> str:
         repository_config_dir = Path(__file__).parents[1] / "configs" / "routeros"

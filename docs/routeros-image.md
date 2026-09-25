@@ -19,7 +19,8 @@ The command:
 3. Checks out the pinned Containerlab-compatible vrnetlab commit.
 4. Applies the checked-in patch that pins the amd64 vrnetlab base manifest,
    Debian snapshot, and package versions.
-5. Downloads the official RouterOS 7.21.5 CHR archive.
+5. Reuses a previously downloaded RouterOS 7.21.5 CHR archive when found, or
+   downloads it otherwise.
 6. Verifies the archive against the pinned SHA-256 digest.
 7. Builds the vrnetlab image.
 8. Removes the temporary build directory.
@@ -37,8 +38,17 @@ run:
 bash tools/build-routeros-image.sh --force
 ```
 
-The host must be x86_64 and have Docker, Git, curl, patch, `sha256sum`, unzip,
-and GNU Make. KVM is recommended when you run the completed lab, but the
+If you already have the RouterOS CHR archive locally, reuse it without
+re-downloading it:
+
+```bash
+bash tools/build-routeros-image.sh --archive /path/to/chr-7.21.5.vmdk.zip
+```
+
+The script also auto-detects a matching archive in the repository root or the
+current working directory. The host must be x86_64 and have Docker, Git, curl,
+patch, `sha256sum`, unzip, and GNU Make. KVM is recommended when you run the
+completed lab, but the
 lab topology explicitly sets `QEMU_ADDITIONAL_ARGS="-accel tcg"` so it can
 fall back to QEMU software emulation on macOS and similar hosts without
 `/dev/kvm`.

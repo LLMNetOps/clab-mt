@@ -17,6 +17,21 @@ qemu_system_x86_package=1:10.0.8+ds-0+deb13u1+b2
 root_dir=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 vrnetlab_patch="$root_dir/containers/routeros/vrnetlab-routeros.patch"
 force=false
+local_archive_path="${ROUTEROS_CHR_ARCHIVE:-}"
+
+find_local_archive() {
+    local candidate
+    for candidate in \
+        "$local_archive_path" \
+        "$PWD/$routeros_archive" \
+        "$root_dir/$routeros_archive"; do
+        if [[ -n "$candidate" && -f "$candidate" ]]; then
+            printf '%s\n' "$candidate"
+            return 0
+        fi
+    done
+    return 1
+}
 
 verify_routeros_archive() {
     local archive_path=$1
@@ -32,56 +47,82 @@ verify_routeros_archive() {
 
 usage() {
     cat <<EOF
-Usage: $0 [--force]
+Usage: $0 [--force] [--archive PATH]
        $0 --print-inputs
 
 Build the pinned $routeros_image image from the official MikroTik CHR archive.
 The build uses a temporary clone of the Containerlab-compatible vrnetlab fork.
 
 Options:
-  --force  rebuild the image even when the local tag already exists
-  --print-inputs
-           print the immutable source, image, repository, and package inputs
-  -h, --help
-           show this help
+  --force        rebuild the image even when the local tag already exists
+  --archive PATH use a previously downloaded CHR archive instead of fetching it
+  --print-inputs print the immutable source, image, repository, and package inputs
+  -h, --help     show this help
 EOF
 }
 
-case ${1:-} in
-    "") ;;
-    --force) force=true ;;
-    --print-inputs)
-        printf 'vrnetlab-commit: %s\n' "$vrnetlab_commit"
-        printf 'archive-sha256: %s\n' "$routeros_archive_sha256"
-        printf 'vrnetlab-base-digest: %s\n' "$vrnetlab_base_digest"
-        printf 'debian-snapshot: %s\n' "$debian_snapshot"
-        printf 'ftp-package: %s\n' "$ftp_package"
-        printf 'tnftp-package: %s\n' "$tnftp_package"
-        printf 'qemu-efi-aarch64-package: %s\n' "$qemu_efi_aarch64_package"
-        printf 'qemu-system-x86-package: %s\n' "$qemu_system_x86_package"
-        exit 0
-        ;;
-    -h|--help)
-        usage
-        exit 0
-        ;;
-    *)
-        usage >&2
-        exit 2
-        ;;
-esac
+while (($# > 0)); do
+    case "$1" in
+        --force)
+            force=true
+            shift
+            ;;
+        --archive)
+            if (($# < 2)); then
+                usage >&2
+                exit 2
+            fi
+            local_archive_path=$2
+            shift 2
+            ;;
+        --print-inputs)
+            printf 'vrnetlab-commit: %s\n' "$vrnetlab_commit"
+            printf 'archive-sha256: %s\n' "$routeros_archive_sha256"
+            printf 'vrnetlab-base-digest: %s\n' "$vrnetlab_base_digest"
+            printf 'debian-snapshot: %s\n' "$debian_snapshot"
+            printf 'ftp-package: %s\n' "$ftp_package"
+            printf 'tnftp-package: %s\n' "$tnftp_package"
+            printf 'qemu-efi-aarch64-package: %s\n' "$qemu_efi_aarch64_package"
+            printf 'qemu-system-x86-package: %s\n' "$qemu_system_x86_package"
+            exit 0
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            usage >&2
+            exit 2
+            ;;
+    esac
+done
 
-if (($# > 1)); then
-    usage >&2
-    exit 2
+if [[ -n "$local_archive_path" && ! -f "$local_archive_path" ]]; then
+    echo "RouterOS image build: CHR archive not found: $local_archive_path" >&2
+    exit 1
 fi
 
-for command in docker git curl unzip make patch sha256sum; do
+if [[ -z "$local_archive_path" ]]; then
+    if local_archive_path=$(find_local_archive); then
+        :
+    else
+        local_archive_path=""
+    fi
+fi
+
+for command in docker git unzip make patch sha256sum; do
     if ! command -v "$command" >/dev/null 2>&1; then
         echo "RouterOS image build: required command not found: $command" >&2
         exit 1
     fi
 done
+
+if [[ -z "$local_archive_path" ]]; then
+    if ! command -v curl >/dev/null 2>&1; then
+        echo "RouterOS image build: required command not found: curl" >&2
+        exit 1
+    fi
+fi
 
 if ! docker info >/dev/null 2>&1; then
     echo "RouterOS image build: Docker is not available to the current user" >&2
@@ -107,8 +148,13 @@ routeros_dir="$build_dir/vrnetlab/mikrotik/routeros"
 echo "Locking the vrnetlab base image and Debian package inputs..."
 patch --batch --forward --directory="$routeros_dir" --strip=1 <"$vrnetlab_patch"
 
-echo "Downloading RouterOS $routeros_version CHR..."
-curl --fail --location --retry 3 --output "$routeros_dir/$routeros_archive" "$routeros_url"
+if local_archive_path=$(find_local_archive); then
+    echo "Using pre-downloaded RouterOS $routeros_version CHR archive: $local_archive_path"
+    cp -- "$local_archive_path" "$routeros_dir/$routeros_archive"
+else
+    echo "Downloading RouterOS $routeros_version CHR..."
+    curl --fail --location --retry 3 --output "$routeros_dir/$routeros_archive" "$routeros_url"
+fi
 
 echo "Verifying the RouterOS CHR archive..."
 verify_routeros_archive "$routeros_dir/$routeros_archive"
