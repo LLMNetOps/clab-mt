@@ -122,6 +122,14 @@ echo "Extracting the RouterOS CHR disk..."
 echo "Building $routeros_image..."
 make -C "$routeros_dir" docker-image
 
+# vrnetlab can emit an arch-qualified tag on non-x86_64 hosts (for example,
+# `:7.21.5-amd64`) while the lab topology expects the canonical unqualified tag.
+# Retag the built image to the canonical name so downstream `clab.yml` references
+# resolve regardless of the host architecture.
+if docker image inspect "$routeros_image-amd64" >/dev/null 2>&1; then
+    docker tag "$routeros_image-amd64" "$routeros_image"
+fi
+
 if ! docker image inspect "$routeros_image" >/dev/null 2>&1; then
     echo "RouterOS image build completed without creating $routeros_image" >&2
     exit 1

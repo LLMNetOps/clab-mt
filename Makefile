@@ -17,7 +17,7 @@ TRAFFIC_INTERVAL ?= 1
 ENDPOINT ?= H1
 DHCP_TIMEOUT ?= 30
 
-.PHONY: help generate generate-prefixes render-configs test test-endpoint-startup test-exabgp-startup test-community-policy test-dhcp-client routeros-image helper-images images deploy validate link-status link-down link-up traffic dhcp-status dhcp-release dhcp-renew failure-tests destroy
+.PHONY: help generate generate-prefixes render-configs test test-endpoint-startup test-exabgp-startup test-community-policy test-dhcp-client routeros-image helper-images images qemu-accel-check deploy validate link-status link-down link-up traffic dhcp-status dhcp-release dhcp-renew failure-tests destroy
 
 help:
 	@echo "make routeros-image build the pinned RouterOS image when it is missing"
@@ -83,7 +83,14 @@ helper-images:
 
 images: routeros-image helper-images
 
-deploy: generate images
+qemu-accel-check:
+	@if [ -e /dev/kvm ]; then \
+		echo "KVM detected at /dev/kvm; using QEMU hardware acceleration."; \
+	else \
+		echo "KVM not available (/dev/kvm missing); falling back to QEMU TCG software emulation."; \
+	fi
+
+deploy: qemu-accel-check generate images
 	containerlab deploy -t $(LAB_TOPOLOGY) --reconfigure
 
 validate:

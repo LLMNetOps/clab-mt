@@ -26,8 +26,9 @@ default does not provide Internet forwarding through the ExaBGP speakers.
 ## Requirements
 
 - An x86_64 Linux host with Docker and Containerlab.
-- KVM access through `/dev/kvm` is strongly recommended for the three
-  RouterOS nodes.
+- KVM access through `/dev/kvm` is recommended for the three RouterOS nodes,
+  but the topology includes a QEMU TCG fallback so it can run on macOS and
+  other hosts without KVM.
 - GNU Make, GNU coreutils (`sha256sum`), Bash, Git, curl, patch, unzip,
   Python 3.10 or newer, `pexpect`, and an OpenSSH client.
 

@@ -17,6 +17,7 @@ topology:
         CLAB_MGMT_PASSTHROUGH: "true"
         QEMU_MEMORY: "1024"
         QEMU_SMP: "1"
+        QEMU_ADDITIONAL_ARGS: "-accel tcg"
 
     R2:
       kind: mikrotik_ros
@@ -27,6 +28,7 @@ topology:
         CLAB_MGMT_PASSTHROUGH: "true"
         QEMU_MEMORY: "1024"
         QEMU_SMP: "1"
+        QEMU_ADDITIONAL_ARGS: "-accel tcg"
 
     R3:
       kind: mikrotik_ros
@@ -37,6 +39,7 @@ topology:
         CLAB_MGMT_PASSTHROUGH: "true"
         QEMU_MEMORY: "1024"
         QEMU_SMP: "1"
+        QEMU_ADDITIONAL_ARGS: "-accel tcg"
 
     ISP:
       kind: linux

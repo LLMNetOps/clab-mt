@@ -3,10 +3,23 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import yaml
+
 from tools.render_routeros import render_configs
 
 
 class RouterOsRendererTests(unittest.TestCase):
+    def test_routeros_nodes_force_qemu_tcg_fallback_when_kvm_is_unavailable(self):
+        clab_path = Path(__file__).parents[1] / "clab.yml"
+        with clab_path.open("r", encoding="utf-8") as fh:
+            clab = yaml.safe_load(fh)
+
+        for node_name in ("R1", "R2", "R3"):
+            node = clab["topology"]["nodes"][node_name]
+            self.assertIn("QEMU_ADDITIONAL_ARGS", node["env"])
+            self.assertIn("-accel", node["env"]["QEMU_ADDITIONAL_ARGS"])
+            self.assertIn("tcg", node["env"]["QEMU_ADDITIONAL_ARGS"])
+
     def _render_repository_edge_config(self) -> str:
         repository_config_dir = Path(__file__).parents[1] / "configs" / "routeros"
 

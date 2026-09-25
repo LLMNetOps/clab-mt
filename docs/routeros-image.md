@@ -38,7 +38,10 @@ bash tools/build-routeros-image.sh --force
 ```
 
 The host must be x86_64 and have Docker, Git, curl, patch, `sha256sum`, unzip,
-and GNU Make. KVM is strongly recommended when you run the completed lab.
+and GNU Make. KVM is recommended when you run the completed lab, but the
+lab topology explicitly sets `QEMU_ADDITIONAL_ARGS="-accel tcg"` so it can
+fall back to QEMU software emulation on macOS and similar hosts without
+`/dev/kvm`.
 
 Verify the result:
 
