@@ -4,8 +4,12 @@ Run these commands from the repository root.
 
 ## Host prerequisites
 
-The client LANs use host Open vSwitch bridges. Install Open vSwitch on the
-host; `make deploy` creates `ovs-bridge0` and `ovs-bridge1` if they are
+The client LANs use host Open vSwitch bridges. `make deploy` installs missing
+`openvswitch-switch`, `unzip`, and Containerlab dependencies before continuing.
+This requires sudo/root access and network access when an install is needed;
+Open vSwitch and `unzip` are installed through apt, and Containerlab uses its
+official installer. Docker and the other image-build prerequisites must already
+be installed. Deploy also creates `ovs-bridge0` and `ovs-bridge1` if they are
 missing. The Open vSwitch socket is root-only, so run the deploy with `sudo`.
 `make destroy` removes only bridges created by this Makefile, and leaves
 pre-existing bridges or managed bridges with remaining ports in place.

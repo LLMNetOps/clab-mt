@@ -16,13 +16,13 @@ TRAFFIC_INTERVAL ?= 1
 ENDPOINT ?= H1
 DHCP_TIMEOUT ?= 30
 
-.PHONY: help generate generate-prefixes render-configs test test-endpoint-startup test-exabgp-startup test-community-policy test-dhcp-client routeros-image helper-images images qemu-accel-check deploy validate ovs-prepare ovs-preflight link traffic dhcp-status dhcp-release dhcp-renew failure-tests destroy
+.PHONY: help generate generate-prefixes render-configs test test-endpoint-startup test-exabgp-startup test-community-policy test-dhcp-client routeros-image helper-images images qemu-accel-check deploy-dependencies deploy validate ovs-prepare ovs-preflight link traffic dhcp-status dhcp-release dhcp-renew failure-tests destroy
 
 help:
 	@printf '  %-42s %s\n' \
 		'make routeros-image' 'build the pinned RouterOS image when it is missing' \
 		'make images' 'build the RouterOS, endpoint, and ExaBGP images' \
-		'make deploy' 'prepare OVS bridges, generate files, build images, and deploy' \
+		'make deploy' 'install host dependencies, prepare OVS bridges, build images, and deploy' \
 		'make validate' 'verify endpoint reachability and routing state' \
 		'make link status r2-r3|isp|ren' 'show a lab link' \
 		'make link down r2-r3|isp|ren' 'disable a lab link' \
@@ -90,6 +90,9 @@ qemu-accel-check:
 		echo "KVM not available (/dev/kvm missing); falling back to QEMU TCG software emulation."; \
 	fi
 
+deploy-dependencies:
+	bash tools/install-dependencies.sh
+
 ovs-prepare:
 	bash tools/ovs-bridges.sh ensure
 	bash tools/ovs-preflight.sh
@@ -97,7 +100,7 @@ ovs-prepare:
 ovs-preflight:
 	bash tools/ovs-preflight.sh
 
-deploy: ovs-prepare qemu-accel-check generate images
+deploy: deploy-dependencies ovs-prepare qemu-accel-check generate images
 	CLAB_QEMU_ACCEL_ARGS="$$(test -e /dev/kvm || echo '-accel tcg')" containerlab deploy -t $(LAB_TOPOLOGY) --reconfigure
 
 validate:

@@ -144,4 +144,68 @@ if OVS_DENIED=1 PATH="$ovs_fixture:$PATH" bash tools/ovs-preflight.sh >/dev/null
 fi
 grep -F "Permission denied" "$ovs_fixture/error" >/dev/null
 
+deps_fixture=$(mktemp -d)
+trap 'rm -rf "$ovs_fixture" "$deps_fixture"' EXIT
+deps_ready_bin="$deps_fixture/ready-bin"
+deps_install_bin="$deps_fixture/install-bin"
+mkdir -p "$deps_ready_bin" "$deps_install_bin"
+for executable in ovs-vsctl unzip containerlab; do
+    printf '#!/bin/bash\nexit 0\n' >"$deps_ready_bin/$executable"
+    chmod +x "$deps_ready_bin/$executable"
+done
+PATH="$deps_ready_bin" /bin/bash tools/install-dependencies.sh \
+    >"$deps_fixture/ready-output"
+grep -F "Deploy dependencies are ready." "$deps_fixture/ready-output" >/dev/null
+
+cat >"$deps_install_bin/apt-get" <<'EOF'
+#!/bin/bash
+printf '%s\n' "$*" >>"$DEPS_LOG"
+if [[ "$1" == install ]]; then
+    for executable in ovs-vsctl unzip; do
+        printf '#!/bin/bash\nexit 0\n' >"$DEPS_BIN/$executable"
+        /bin/chmod +x "$DEPS_BIN/$executable"
+    done
+    /bin/cat >"$DEPS_BIN/curl" <<'CURL'
+#!/bin/bash
+output=
+while (($#)); do
+    if [[ "$1" == --output ]]; then output=$2; shift 2; else shift; fi
+done
+/bin/cat >"$output" <<'INSTALLER'
+#!/bin/bash
+printf '#!/bin/bash\nexit 0\n' >"$DEPS_BIN/containerlab"
+/bin/chmod +x "$DEPS_BIN/containerlab"
+INSTALLER
+CURL
+    /bin/chmod +x "$DEPS_BIN/curl"
+fi
+EOF
+cat >"$deps_install_bin/mktemp" <<'EOF'
+#!/bin/bash
+: >"$DEPS_TEMP_FILE"
+printf '%s\n' "$DEPS_TEMP_FILE"
+EOF
+cat >"$deps_install_bin/rm" <<'EOF'
+#!/bin/bash
+exec /bin/rm "$@"
+EOF
+cat >"$deps_install_bin/sudo" <<'EOF'
+#!/bin/bash
+exec "$@"
+EOF
+chmod +x "$deps_install_bin"/*
+ln -s /bin/bash "$deps_install_bin/bash"
+DEPS_BIN="$deps_install_bin" \
+DEPS_LOG="$deps_fixture/apt.log" \
+DEPS_TEMP_FILE="$deps_fixture/containerlab-installer" \
+PATH="$deps_install_bin" /bin/bash tools/install-dependencies.sh \
+    >"$deps_fixture/install-output"
+grep -Fx "update" "$deps_fixture/apt.log" >/dev/null
+grep -Fx "install --yes openvswitch-switch unzip curl" "$deps_fixture/apt.log" >/dev/null
+[[ -x "$deps_install_bin/ovs-vsctl" ]]
+[[ -x "$deps_install_bin/unzip" ]]
+[[ -x "$deps_install_bin/containerlab" ]]
+grep -F "Installing Containerlab with its official installer" \
+    "$deps_fixture/install-output" >/dev/null
+
 echo "Operator tool interfaces passed."
