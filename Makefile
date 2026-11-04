@@ -98,7 +98,7 @@ ovs-preflight:
 	bash tools/ovs-preflight.sh
 
 deploy: ovs-prepare qemu-accel-check generate images
-	containerlab deploy -t $(LAB_TOPOLOGY) --reconfigure
+	CLAB_QEMU_ACCEL_ARGS="$$(test -e /dev/kvm || echo '-accel tcg')" containerlab deploy -t $(LAB_TOPOLOGY) --reconfigure
 
 validate:
 	tools/validate.sh

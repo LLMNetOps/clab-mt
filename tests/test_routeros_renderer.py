@@ -11,16 +11,26 @@ from tools.render_routeros import render_configs
 
 
 class RouterOsRendererTests(unittest.TestCase):
-    def test_routeros_nodes_force_qemu_tcg_fallback_when_kvm_is_unavailable(self):
+    def test_routeros_nodes_use_conditional_qemu_acceleration(self):
         clab_path = Path(__file__).parents[1] / "llmnetops.clab.yml"
         with clab_path.open("r", encoding="utf-8") as fh:
             clab = yaml.safe_load(fh)
 
         for node_name in ("R1", "R2", "R3"):
             node = clab["topology"]["nodes"][node_name]
-            self.assertIn("QEMU_ADDITIONAL_ARGS", node["env"])
-            self.assertIn("-accel", node["env"]["QEMU_ADDITIONAL_ARGS"])
-            self.assertIn("tcg", node["env"]["QEMU_ADDITIONAL_ARGS"])
+            self.assertEqual(
+                node["env"]["QEMU_ADDITIONAL_ARGS"],
+                "${CLAB_QEMU_ACCEL_ARGS:=}",
+            )
+
+        makefile = (Path(__file__).parents[1] / "Makefile").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(
+            "CLAB_QEMU_ACCEL_ARGS=\"$$(test -e /dev/kvm || echo '-accel tcg')\" "
+            "containerlab deploy",
+            makefile,
+        )
 
     def test_client_management_addresses_and_router_lan_links_are_unique(self):
         clab_path = Path(__file__).parents[1] / "llmnetops.clab.yml"

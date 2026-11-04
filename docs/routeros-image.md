@@ -48,10 +48,11 @@ bash tools/build-routeros-image.sh --archive /path/to/chr-7.21.5.vmdk.zip
 The script also auto-detects a matching archive in the repository root or the
 current working directory. The host must be x86_64 and have Docker, Git, curl,
 patch, `sha256sum`, unzip, and GNU Make. KVM is recommended when you run the
-completed lab, but the
-lab topology explicitly sets `QEMU_ADDITIONAL_ARGS="-accel tcg"` so it can
-fall back to QEMU software emulation on macOS and similar hosts without
-`/dev/kvm`.
+completed lab. `make deploy` passes `QEMU_ADDITIONAL_ARGS="-accel tcg"` only
+when `/dev/kvm` is missing, so the lab falls back to QEMU software emulation on
+macOS and similar hosts. On hosts with KVM the argument stays empty: vrnetlab
+already adds `-enable-kvm`, and QEMU refuses to start when both accelerators
+are given.
 
 Verify the result:
 
