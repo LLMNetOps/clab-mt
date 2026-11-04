@@ -31,6 +31,5 @@ and disclosure according to severity and available capacity.
 ## Lab credentials and deployment scope
 
 The lab intentionally keeps the default RouterOS `admin` / `admin` credential,
-and the checked-in eBGP TCP MD5 strings are lab-only values, not production
-secrets. Their presence alone is not a vulnerability. Do not expose a deployed
-lab to untrusted networks, and never reuse these values outside this testbed.
+and its eBGP sessions use no TCP MD5 authentication. Do not expose a deployed
+lab to untrusted networks, and never reuse this credential outside this testbed.

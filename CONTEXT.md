@@ -41,7 +41,7 @@ REN availability does not qualify R1 to originate the ISP-gated OSPF default.
 A Linux-based external BGP peer that emits the lab’s generated advertisements without acting as a forwarding router.
 
 **Endpoint host**:
-A Linux host attached to the campus core that obtains its address and default route through DHCP rather than running a routing protocol. In this lab H1 is attached to R2 and H2 is attached to R3.
+A Linux host attached to the campus core that obtains its address and default route through DHCP rather than running a routing protocol. H1/H2 share R2's LAN; H3/H4 share R3's LAN.
 _Avoid_: workstation, client router
 
 ## Routing and advertisements
@@ -145,10 +145,6 @@ and generated AS paths, and renders the external advertisements.
 **Generated-prefix pool**:
 The reserved `10.64.0.0/10` IPv4 space from which the prefix generator allocates test routes, kept separate from infrastructure and DHCP-served campus segments.
 
-**eBGP session protection**:
-The lab-only TCP MD5 authentication applied independently to the R1–ISP and
-R1–REN sessions.
-
 ## Address assignment
 
 **DHCP-served campus segment**:
@@ -164,7 +160,7 @@ stable across destroy/deploy cycles.
 A controlled withdrawal or link event used to validate convergence, such as stopping an external speaker or disabling one campus-core link.
 
 **Campus reachability test**:
-The endpoint acceptance test in which H1 and H2 receive DHCP configuration and can reach each other with both ping and traceroute across the OSPF campus core.
+The endpoint acceptance test in which all four clients receive DHCP configuration, same-LAN pairs can reach each other, and H1 can reach H3 across the OSPF campus core.
 
 ## Implemented lab contract
 
@@ -174,7 +170,7 @@ The endpoint acceptance test in which H1 and H2 receive DHCP configuration and c
   control-plane routes, not forwarding destinations.
 - The triangle uses OSPFv2 area 0. R1 originates the ISP-gated OSPF default as
   external type 1 with metric 20 and does not redistribute generated BGP routes.
-- H1 is on R2's `10.255.10.0/24` DHCP-served segment; H2 is on R3's
+- H1/H2 are on R2's `10.255.10.0/24` DHCP-served segment; H3/H4 are on R3's
   `10.255.20.0/24` DHCP-served segment.
 - The generated-prefix pool is `10.64.0.0/10`; infrastructure and endpoint
   segments use `10.255.0.0/16` subdivisions and do not overlap it.

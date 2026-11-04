@@ -144,44 +144,52 @@ validate_filter_contract() {
 }
 
 validate_endpoints() {
-    local h1 h2 h1_ip h2_ip
-    h1=$(lab_require_running H1)
-    h2=$(lab_require_running H2)
+    local endpoints=(H1 H2 H3 H4)
+    local expected_prefixes=(10.255.10. 10.255.10. 10.255.20. 10.255.20.)
+    local -a containers=() addresses=()
+    local endpoint_index endpoint container address source_index destination_index
 
-    echo "Waiting for DHCP leases on H1 and H2..."
-    h1_ip=""
-    h2_ip=""
-    for _attempt in $(seq 1 60); do
-        h1_ip=$(lab_interface_ip "$h1")
-        h2_ip=$(lab_interface_ip "$h2")
-        if [[ -n "$h1_ip" && -n "$h2_ip" ]]; then
-            break
-        fi
-        sleep 1
-    done
-
-    if [[ -z "$h1_ip" || -z "$h2_ip" ]]; then
-        echo "validation: DHCP lease missing (H1='$h1_ip', H2='$h2_ip')" >&2
-        exit 1
-    fi
-
-    echo "H1 address: $h1_ip"
-    echo "H2 address: $h2_ip"
-    echo "Waiting for campus routing convergence..."
-    for _attempt in $(seq 1 60); do
-        if docker exec "$h1" ping -c 1 -W 1 "$h2_ip" >/dev/null 2>&1; then
-            break
-        fi
-        if [[ "$_attempt" == 60 ]]; then
-            echo "validation: H1 cannot reach H2 after routing convergence timeout" >&2
+    echo "Waiting for DHCP leases on H1, H2, H3, and H4..."
+    for endpoint_index in "${!endpoints[@]}"; do
+        endpoint=${endpoints[$endpoint_index]}
+        container=$(lab_require_running "$endpoint")
+        address=""
+        for _attempt in $(seq 1 60); do
+            address=$(lab_interface_ip "$container")
+            if [[ -n "$address" ]]; then
+                break
+            fi
+            sleep 1
+        done
+        if [[ "$address" != "${expected_prefixes[$endpoint_index]}"* ]]; then
+            echo "validation: $endpoint has unexpected or missing DHCP address '$address'" >&2
             exit 1
         fi
-        sleep 1
+        containers[$endpoint_index]=$container
+        addresses[$endpoint_index]=$address
+        echo "$endpoint address: $address"
     done
-    echo "H1 -> H2 ping:"
-    docker exec "$h1" ping -c 3 -W 1 "$h2_ip"
-    echo "H1 -> H2 traceroute:"
-    docker exec "$h1" traceroute -n -q 1 -w 1 -m 8 "$h2_ip"
+
+    echo "Waiting for same-LAN and routed client connectivity..."
+    for endpoint_pair in "0 1" "2 3" "0 2"; do
+        read -r source_index destination_index <<<"$endpoint_pair"
+        for _attempt in $(seq 1 60); do
+            if docker exec "${containers[$source_index]}" ping -c 1 -W 1 \
+                "${addresses[$destination_index]}" >/dev/null 2>&1; then
+                break
+            fi
+            if [[ "$_attempt" == 60 ]]; then
+                echo "validation: ${endpoints[$source_index]} cannot reach ${endpoints[$destination_index]}" >&2
+                exit 1
+            fi
+            sleep 1
+        done
+        echo "${endpoints[$source_index]} -> ${endpoints[$destination_index]} ping:"
+        docker exec "${containers[$source_index]}" ping -c 3 -W 1 \
+            "${addresses[$destination_index]}"
+    done
+    echo "H1 -> H3 traceroute:"
+    docker exec "${containers[0]}" traceroute -n -q 1 -w 1 -m 8 "${addresses[2]}"
 }
 
 validate_control_plane() {

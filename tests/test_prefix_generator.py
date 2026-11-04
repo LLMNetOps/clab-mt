@@ -306,13 +306,13 @@ class PrefixGeneratorTests(unittest.TestCase):
                 *((route, isp_config) for route in manifest.isp_routes),
                 *((route, ren_config) for route in manifest.ren_routes),
             ):
-                rendered_tail = " ".join(str(asn) for asn in route.as_path_tail)
+                rendered_path = " ".join(str(asn) for asn in route.expected_as_path)
                 rendered_communities = " ".join(route.communities)
                 expected_stanza = "\n".join(
                     (
                         f"        route {route.prefix} {{",
                         "            next-hop self;",
-                        f"            as-path [ {rendered_tail} ];",
+                        f"            as-path [ {rendered_path} ];",
                         f"            community [ {rendered_communities} ];",
                         "        }",
                     )

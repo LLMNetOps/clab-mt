@@ -122,8 +122,8 @@ assert "local-as 65002;" in ren_config
 assert "peer-as 65000;" in ren_config
 for speaker, config in (("isp", isp_config), ("ren", ren_config)):
     for route in manifest["routes"][speaker]:
-        rendered_tail = " ".join(str(asn) for asn in route["as_path_tail"])
-        assert f"as-path [ {rendered_tail} ];" in config
+        rendered_path = " ".join(str(asn) for asn in route["expected_as_path"])
+        assert f"as-path [ {rendered_path} ];" in config
 assert "65000:20" not in isp_config
 assert "65000:10" not in ren_config
 
@@ -155,7 +155,7 @@ scan_status=0
 legacy_matches=$(
     grep -RInEi --exclude='*.pyc' \
         'large-community|extended-community|idren|7713|64302|141682' \
-        generated configs/routeros/r1.rsc clab.yml README.md CONTEXT.md \
+        generated configs/routeros/r1.rsc llmnetops.clab.yml README.md CONTEXT.md \
         docs tools
 ) || scan_status=$?
 if ((scan_status == 0)); then

@@ -150,7 +150,6 @@ class SpeakerConfig:
     router_id: str
     local_as: int
     peer_as: int
-    md5: str
 
 
 @dataclass(frozen=True)
@@ -242,7 +241,6 @@ ISP_SPEAKER = SpeakerConfig(
     router_id="10.255.2.2",
     local_as=ISP_AS,
     peer_as=CAMPUS_AS,
-    md5="campus-isp-ebgp",
 )
 REN_SPEAKER = SpeakerConfig(
     name="REN",
@@ -251,7 +249,6 @@ REN_SPEAKER = SpeakerConfig(
     router_id="10.255.2.6",
     local_as=REN_AS,
     peer_as=CAMPUS_AS,
-    md5="campus-ren-ebgp",
 )
 
 
@@ -259,15 +256,13 @@ def _static_route_lines(routes: Sequence[SyntheticRoute]) -> list[str]:
     lines = []
     for route in routes:
         prefix = route.prefix
-        tail = route.as_path_tail
+        # ExaBGP sends an explicit as-path verbatim, so it must include the speaker AS.
+        path = route.expected_as_path
         attributes = [
             f"        route {prefix} {{",
             "            next-hop self;",
+            f"            as-path [ {' '.join(str(asn) for asn in path)} ];",
         ]
-        if tail:
-            attributes.append(
-                f"            as-path [ {' '.join(str(asn) for asn in tail)} ];"
-            )
         attributes.extend(
             [
                 f"            community [ {' '.join(route.communities)} ];",
@@ -293,7 +288,6 @@ def _exabgp_config(
         f"    peer-as {speaker.peer_as};",
         "    hold-time 30;",
         "    adj-rib-out true;",
-        f'    md5-password "{speaker.md5}";',
         "    family {",
         "        ipv4 unicast;",
         "    }",

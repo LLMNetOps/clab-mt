@@ -4,7 +4,7 @@
 
 | Segment | Prefix | Endpoints |
 | --- | --- | --- |
-| Management | `172.20.20.0/24` | R1 `.11`, R2 `.12`, R3 `.13`, ISP `.21`, REN `.22`, H1 `.31`, H2 `.32` |
+| Management | `172.20.20.0/24` | R1 `.11`, R2 `.12`, R3 `.13`, ISP `.21`, REN `.22`, H1 `.31`, H2 `.32`, H3 `.33`, H4 `.34` |
 | R1 loopback | `10.255.0.1/32` | R1 |
 | R2 loopback | `10.255.0.2/32` | R2 |
 | R3 loopback | `10.255.0.3/32` | R3 |
@@ -13,9 +13,11 @@
 | R1–R3 | `10.255.1.8/30` | R1 `.9`, R3 `.10` |
 | R1–ISP | `10.255.2.0/30` | R1 `.1`, ISP `.2` |
 | R1–REN | `10.255.2.4/30` | R1 `.5`, REN `.6` |
-| H1 LAN | `10.255.10.0/24` | R2 gateway `.1`, DHCP `.100–.199` |
-| H2 LAN | `10.255.20.0/24` | R3 gateway `.1`, DHCP `.100–.199` |
+| R2 client LAN | `10.255.10.0/24` | R2 gateway `.1`, DHCP `.100–.199`, H1 and H2 |
+| R3 client LAN | `10.255.20.0/24` | R3 gateway `.1`, DHCP `.100–.199`, H3 and H4 |
 | Generated routes | `10.64.0.0/10` | Control plane only |
+
+Each client LAN is one Open vSwitch bridge shared by its router and endpoints: `ovs-bridge0` connects R2 `ether4` with H1 and H2, and `ovs-bridge1` connects R3 `ether4` with H3 and H4.
 
 ## Routing behavior
 
@@ -56,7 +58,7 @@ make generate \
 you want to deploy a customized set:
 
 ```bash
-make deploy SEED=42
+sudo make deploy SEED=42
 ```
 
 Generated files are:

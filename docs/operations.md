@@ -2,12 +2,20 @@
 
 Run these commands from the repository root.
 
+## Host prerequisites
+
+The client LANs use host Open vSwitch bridges. Install Open vSwitch on the
+host; `make deploy` creates `ovs-bridge0` and `ovs-bridge1` if they are
+missing. The Open vSwitch socket is root-only, so run the deploy with `sudo`.
+`make destroy` removes only bridges created by this Makefile, and leaves
+pre-existing bridges or managed bridges with remaining ports in place.
+
 ## Deploy and validate
 
 Deploy or replace the lab:
 
 ```bash
-make deploy
+sudo make deploy
 ```
 
 This command generates configuration files, builds all required images, and
@@ -19,7 +27,8 @@ Validate endpoint reachability and routing state:
 make validate
 ```
 
-The full validation checks H1-to-H2 traffic, both external BGP sessions,
+The full validation checks same-LAN traffic for H1/H2 and H3/H4, routed
+H1-to-H3 traffic, both external BGP sessions,
 received route counts, all four standard-community route categories, the
 community-derived local preferences on R1, equal preference for shared
 adjacent-origin routes, REN preference for shared transit-learned routes, OSPF
@@ -67,14 +76,15 @@ The default command sends continuous ICMP traffic from H1 to H2:
 make traffic
 ```
 
-Press Ctrl-C to stop it. Use a fixed probe count when you do not want a
-continuous command:
+Press Ctrl-C to stop it. Any two different endpoint hosts can be selected.
+Use a fixed probe count when you do not want a continuous command:
 
 ```bash
 make traffic TRAFFIC_COUNT=20
+make traffic TRAFFIC_SOURCE=H1 TRAFFIC_DESTINATION=H3 TRAFFIC_COUNT=20
 ```
 
-Reverse the direction:
+Reverse the direction or choose another pair:
 
 ```bash
 make traffic TRAFFIC_SOURCE=H2 TRAFFIC_DESTINATION=H1
@@ -106,10 +116,11 @@ Request a new lease:
 make dhcp-renew ENDPOINT=H1
 ```
 
-Use `ENDPOINT=H2` for H2. `DHCP_TIMEOUT` controls how many seconds the release
-or renewal operation can take. Its default is `30`.
+Use `ENDPOINT=H2`, `H3`, or `H4` to manage the other clients. H1/H2 use R2's
+LAN; H3/H4 use R3's. `DHCP_TIMEOUT` controls how many seconds the release or
+renewal operation can take. Its default is `30`.
 
-Run the client lease-cycle test on both endpoint hosts:
+Run the client lease-cycle test on all four endpoint hosts:
 
 ```bash
 make test-dhcp-client
@@ -130,14 +141,14 @@ The supported link names are:
 Show a link:
 
 ```bash
-make link-status LINK=isp
+make link status isp
 ```
 
 Disable and restore the link:
 
 ```bash
-make link-down LINK=isp
-make link-up LINK=isp
+make link down isp
+make link up isp
 ```
 
 The link tool makes only the requested change. It does not restore a disabled
@@ -174,7 +185,7 @@ recovery, endpoint reachability, and ExaBGP process continuity. It then keeps
 the ISP data interface down while restarting R1 and verifies that the
 converged campus core has no default until ISP recovers.
 
-The campus-core test disables the R2–R3 link. It verifies that H1-to-H2 traffic
+The campus-core test disables the R2–R3 link. It verifies that H1-to-H3 traffic
 moves from R2–R3 to R2–R1–R3. It then restores the link and verifies the normal
 path.
 

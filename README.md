@@ -3,8 +3,8 @@
 This repository deploys a small campus routing lab with Containerlab.
 
 R1 is the **campus edge**. R1, R2, and R3 form the OSPF **campus core**.
-R1 also has external BGP sessions with ISP and REN. H1 and H2 receive
-addresses through DHCP.
+R1 also has external BGP sessions with ISP and REN. H1 through H4 receive
+addresses through DHCP; H1/H2 share R2's LAN, and H3/H4 share R3's LAN.
 
 ![Containerlab campus eBGP topology](campus-ebgp.svg)
 
@@ -48,10 +48,15 @@ make destroy
 
 The first `make deploy`:
 
-1. Generates the BGP advertisements and RouterOS startup files.
-2. Builds the RouterOS image if it is not present.
-3. Builds the endpoint and ExaBGP images.
-4. Deploys or replaces the Containerlab lab.
+1. Creates the host OVS bridges if they are missing.
+2. Generates the BGP advertisements and RouterOS startup files.
+3. Builds the RouterOS image if it is not present.
+4. Builds the endpoint and ExaBGP images.
+5. Deploys or replaces the Containerlab lab.
+
+`make destroy` removes the host bridges created by `make deploy` when they
+have no remaining ports. It leaves pre-existing bridges and bridges with
+remaining ports in place.
 
 The RouterOS image build checks out a pinned vrnetlab commit, locks its base
 image and Debian packages, and verifies the official RouterOS 7.21.5 CHR
@@ -71,14 +76,20 @@ Send continuous ICMP traffic from H1 to H2:
 make traffic
 ```
 
+Select any two different endpoints, for example H1 to H3:
+
+```bash
+make traffic TRAFFIC_SOURCE=H1 TRAFFIC_DESTINATION=H3
+```
+
 Press Ctrl-C to stop the traffic.
 
 Show, disable, and restore one lab link:
 
 ```bash
-make link-status LINK=r2-r3
-make link-down LINK=r2-r3
-make link-up LINK=r2-r3
+make link status r2-r3
+make link down r2-r3
+make link up r2-r3
 ```
 
 Valid link names are `r2-r3`, `isp`, and `ren`. A link that you disable
@@ -92,8 +103,8 @@ make dhcp-release ENDPOINT=H1
 make dhcp-renew ENDPOINT=H1
 ```
 
-The supported endpoint hosts are H1 and H2. Releasing a lease does not stop
-the endpoint container.
+The supported endpoint hosts are H1, H2, H3, and H4. Releasing a lease does
+not stop the endpoint container.
 
 Run the automated failure and recovery tests:
 

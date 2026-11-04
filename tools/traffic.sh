@@ -11,7 +11,7 @@ interval=${TRAFFIC_INTERVAL:-1}
 
 usage() {
     cat <<EOF
-Usage: $0 [--source H1|H2] [--destination H1|H2] [--count NUMBER] [--interval SECONDS]
+Usage: $0 [--source H1|H2|H3|H4] [--destination H1|H2|H3|H4] [--count NUMBER] [--interval SECONDS]
 
 Send ICMP traffic between the endpoint hosts. A count of 0 sends traffic until
 you press Ctrl-C. Defaults: source H1, destination H2, count 0, interval 1.
@@ -48,13 +48,24 @@ while (($#)); do
     esac
 done
 
-case "$source_node:$destination_node" in
-    H1:H2|H2:H1) ;;
+case "$source_node" in
+    H1|H2|H3|H4) ;;
     *)
-        echo "Traffic endpoints must be H1 and H2 in opposite directions." >&2
+        echo "Unknown traffic source endpoint: $source_node (expected H1, H2, H3, or H4)." >&2
         exit 2
         ;;
 esac
+case "$destination_node" in
+    H1|H2|H3|H4) ;;
+    *)
+        echo "Unknown traffic destination endpoint: $destination_node (expected H1, H2, H3, or H4)." >&2
+        exit 2
+        ;;
+esac
+if [[ "$source_node" == "$destination_node" ]]; then
+    echo "Traffic source and destination must be different endpoint hosts." >&2
+    exit 2
+fi
 
 if [[ ! "$count" =~ ^[0-9]+$ ]]; then
     echo "Traffic count must be zero or a positive integer." >&2

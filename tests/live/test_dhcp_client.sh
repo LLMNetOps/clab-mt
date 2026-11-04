@@ -68,6 +68,8 @@ test_endpoint() {
 }
 
 test_endpoint H1 10.255.10. 10.255.10.1
-test_endpoint H2 10.255.20. 10.255.20.1
+test_endpoint H2 10.255.10. 10.255.10.1
+test_endpoint H3 10.255.20. 10.255.20.1
+test_endpoint H4 10.255.20. 10.255.20.1
 
 echo "DHCP client release and renewal tests passed."

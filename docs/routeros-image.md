@@ -78,7 +78,7 @@ make docker-image
 ```
 
 The resulting tag must be `vrnetlab/mikrotik_routeros:7.21.5`. This is the
-image in [`clab.yml`](../clab.yml).
+image in [`llmnetops.clab.yml`](../llmnetops.clab.yml).
 
 The checked-in patch is part of this repository's reproducible build contract;
 do not omit it from a manual build. See the pinned upstream

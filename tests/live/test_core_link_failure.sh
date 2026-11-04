@@ -34,7 +34,7 @@ assert_path() {
     local attempt
 
     for attempt in $(seq 1 "$path_attempts"); do
-        actual=$(trace_hops "$h2_ip")
+        actual=$(trace_hops "$h3_ip")
         if [[ "$actual" == "$expected" ]]; then
             echo "$label path verified: $actual"
             return
@@ -51,7 +51,7 @@ assert_path() {
 assert_ping() {
     local label=$1
     echo "$label ping:"
-    docker exec "$h1" ping -c 3 -W 1 "$h2_ip"
+    docker exec "$h1" ping -c 3 -W 1 "$h3_ip"
 }
 
 restore_link() {
@@ -65,11 +65,11 @@ trap restore_link EXIT
 
 bash tools/link-state.sh status r2-r3 >/dev/null
 h1=$(lab_require_running H1)
-h2=$(lab_require_running H2)
-h2_ip=$(lab_wait_for_interface_ip "$h2" eth1 30 1)
+h3=$(lab_require_running H3)
+h3_ip=$(lab_wait_for_interface_ip "$h3" eth1 30 1)
 
-normal_path="10.255.10.1 10.255.1.6 $h2_ip"
-rerouted_path="10.255.10.1 10.255.1.1 10.255.1.10 $h2_ip"
+normal_path="10.255.10.1 10.255.1.6 $h3_ip"
+rerouted_path="10.255.10.1 10.255.1.1 10.255.1.10 $h3_ip"
 
 assert_ping "Normal R2-R3"
 assert_path "Normal R2-R3" "$normal_path"

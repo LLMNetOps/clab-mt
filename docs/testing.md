@@ -81,10 +81,10 @@ Run:
 make test-dhcp-client
 ```
 
-This test needs a deployed lab. For H1 and H2, it requests a lease, releases
-the lease, verifies that the endpoint host stays running without an address or
-data-plane default route, and requests a new lease. It then verifies the
-expected subnet and gateway.
+This test needs a deployed lab. For H1 through H4, it requests a lease,
+releases the lease, verifies that the endpoint host stays running without an
+address or data-plane default route, and requests a new lease. H1/H2 must use
+R2's subnet and gateway; H3/H4 must use R3's.
 
 ## Live failure tests
 

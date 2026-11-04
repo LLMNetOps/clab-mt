@@ -5,16 +5,21 @@
 /ip firewall nat remove [find]
 /ip firewall raw remove [find]
 
+/interface bridge
+add name=bridge-lan protocol-mode=none
+/interface bridge port
+add bridge=bridge-lan interface=ether4
+
 /ip address
 add address={{ROUTER_ID}}/32 interface=lo comment="{{ROUTER_NAME}} loopback"
 add address={{ETHER2_ADDRESS}} interface=ether2 comment="{{ETHER2_LINK}}"
 add address={{ETHER3_ADDRESS}} interface=ether3 comment="{{ETHER3_LINK}}"
-add address={{LAN_GATEWAY}}/24 interface=ether4 comment="{{ENDPOINT_NAME}} LAN"
+add address={{LAN_GATEWAY}}/24 interface=bridge-lan comment="{{ENDPOINT_NAME}} LAN"
 
 /ip pool
 add name=pool-{{ENDPOINT_SLUG}} ranges={{DHCP_RANGE}}
 /ip dhcp-server
-add address-pool=pool-{{ENDPOINT_SLUG}} disabled=no interface=ether4 lease-time=1h name=dhcp-{{ENDPOINT_SLUG}}
+add address-pool=pool-{{ENDPOINT_SLUG}} disabled=no interface=bridge-lan lease-time=1h name=dhcp-{{ENDPOINT_SLUG}}
 /ip dhcp-server network
 add address={{LAN_PREFIX}} gateway={{LAN_GATEWAY}} comment="{{ENDPOINT_NAME}} LAN"
 
@@ -25,5 +30,5 @@ add name=backbone area-id=0.0.0.0 instance=campus-ospf
 /routing ospf interface-template
 add area=backbone interfaces=ether2 type=ptp cost=10
 add area=backbone interfaces=ether3 type=ptp cost=10
-add area=backbone interfaces=ether4 passive
+add area=backbone interfaces=bridge-lan passive
 add area=backbone interfaces=lo passive

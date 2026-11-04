@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1370" height="583" viewBox="0 0 1370 583"><defs>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="800" viewBox="0 0 1000 800"><style>.export-graph-layer{display:none}</style><defs>
 <filter id="text-shadow" x="-50%" y="-50%" width="200%" height="200%">
   <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" result="blur"/>
   <feFlood flood-color="#3C3E41" result="color"/>
@@ -115,4 +115,75 @@
                                     c-0.5,0.2-0.9,0.4-1.2,0.8c-0.3,0.3-0.6,0.8-0.8,1.2c-0.2,0.5-0.2,0.9-0.2,1.4V76h58.2V32.5z"
                                 />
                             </g>
-                        </g></g></g><rect x="448.84141540527344" y="622" width="22.317169189453125" height="18.8" fill="rgba(0, 0, 0, 0.7)" rx="3" ry="3"/><text x="460" y="631.4" font-size="11.2" font-weight="500" font-family='Roboto, sans-serif' dominant-baseline="central" fill="#F5F5F5" text-anchor="middle" filter="url(#text-shadow)">H2</text></g></g></svg>
+                                                </g></g></g><rect x="448.84141540527344" y="622" width="22.317169189453125" height="18.8" fill="rgba(0, 0, 0, 0.7)" rx="3" ry="3"/><text x="460" y="631.4" font-size="11.2" font-weight="500" font-family='Roboto, sans-serif' dominant-baseline="central" fill="#F5F5F5" text-anchor="middle" filter="url(#text-shadow)">H2</text></g></g>
+    <defs>
+        <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#22303a" stroke-width="1"/>
+        </pattern>
+        <style>
+            .title { fill: #f0f4f6; font: 600 22px sans-serif; }
+            .subtitle { fill: #9aaab4; font: 13px sans-serif; }
+            .link-core { stroke: #54d89a; }
+            .link-external { stroke: #5bc8e8; }
+            .link-access { stroke: #efb85c; }
+            .link { fill: none; stroke-width: 3; stroke-linecap: round; }
+            .node { stroke-width: 2; rx: 8; }
+            .router { fill: #182b44; stroke: #6ea8ff; }
+            .peer { fill: #15313a; stroke: #5bc8e8; }
+            .bridge { fill: #382d1b; stroke: #efb85c; }
+            .host { fill: #19332c; stroke: #71d5a5; }
+            .node-name { fill: #f1f5f7; font: 600 16px sans-serif; text-anchor: middle; }
+            .node-type { fill: #a9bac4; font: 11px sans-serif; text-anchor: middle; }
+            .port { fill: #d7e0e5; font: 11px sans-serif; text-anchor: middle; paint-order: stroke; stroke: #101820; stroke-width: 5px; stroke-linejoin: round; }
+            .legend { fill: #b7c4cb; font: 12px sans-serif; }
+        </style>
+    </defs>
+    <rect width="1000" height="800" fill="#101820"/>
+    <rect width="1000" height="800" fill="url(#grid)"/>
+    <text class="title" x="32" y="42">Campus eBGP lab</text>
+    <text class="subtitle" x="32" y="64">OSPF core · ISP and REN eBGP · dual OVS client LANs</text>
+    <g class="links">
+        <path class="link link-external" d="M 330 155 L 450 250" data-id="Clab-Link3"/>
+        <path class="link link-external" d="M 670 155 L 550 250" data-id="Clab-Link4"/>
+        <path class="link link-core" d="M 455 310 L 345 400" data-id="Clab-Link0"/>
+        <path class="link link-core" d="M 370 440 L 630 440" data-id="Clab-Link1"/>
+        <path class="link link-core" d="M 545 310 L 655 400" data-id="Clab-Link2"/>
+        <path class="link link-access" d="M 300 480 L 300 550" data-id="Clab-Link5"/>
+        <path class="link link-access" d="M 700 480 L 700 550" data-id="Clab-Link8"/>
+        <path class="link link-access" d="M 260 610 L 190 680" data-id="Clab-Link6"/>
+        <path class="link link-access" d="M 340 610 L 410 680" data-id="Clab-Link7"/>
+        <path class="link link-access" d="M 660 610 L 590 680" data-id="Clab-Link9"/>
+        <path class="link link-access" d="M 740 610 L 810 680" data-id="Clab-Link10"/>
+    </g>
+    <g class="interfaces">
+        <text class="port" x="350" y="178">eth1</text><text class="port" x="426" y="238">ether4</text>
+        <text class="port" x="650" y="178">eth1</text><text class="port" x="574" y="238">ether5</text>
+        <text class="port" x="421" y="339">ether2</text><text class="port" x="369" y="387">ether2</text>
+        <text class="port" x="410" y="427">ether3</text><text class="port" x="590" y="427">ether3</text>
+        <text class="port" x="579" y="339">ether3</text><text class="port" x="631" y="387">ether2</text>
+        <text class="port" x="262" y="512">ether4</text><text class="port" x="338" y="537">ovs0-r2</text>
+        <text class="port" x="662" y="512">ether4</text><text class="port" x="738" y="537">ovs1-r3</text>
+        <text class="port" x="222" y="651">ovs0-h1</text><text class="port" x="160" y="672">eth1</text>
+        <text class="port" x="378" y="651">ovs0-h2</text><text class="port" x="440" y="672">eth1</text>
+        <text class="port" x="622" y="651">ovs1-h3</text><text class="port" x="560" y="672">eth1</text>
+        <text class="port" x="778" y="651">ovs1-h4</text><text class="port" x="840" y="672">eth1</text>
+    </g>
+    <g class="nodes">
+        <g data-id="ISP"><rect class="node peer" x="210" y="95" width="140" height="60"/><text class="node-name" x="280" y="122">ISP</text><text class="node-type" x="280" y="141">eBGP peer</text></g>
+        <g data-id="REN"><rect class="node peer" x="650" y="95" width="140" height="60"/><text class="node-name" x="720" y="122">REN</text><text class="node-type" x="720" y="141">eBGP peer</text></g>
+        <g data-id="R1"><rect class="node router" x="430" y="250" width="140" height="60"/><text class="node-name" x="500" y="278">R1</text><text class="node-type" x="500" y="297">RouterOS · eBGP / OSPF</text></g>
+        <g data-id="R2"><rect class="node router" x="230" y="400" width="140" height="80"/><text class="node-name" x="300" y="435">R2</text><text class="node-type" x="300" y="456">RouterOS · OSPF</text></g>
+        <g data-id="R3"><rect class="node router" x="630" y="400" width="140" height="80"/><text class="node-name" x="700" y="435">R3</text><text class="node-type" x="700" y="456">RouterOS · OSPF</text></g>
+        <g data-id="ovs-bridge0"><rect class="node bridge" x="210" y="550" width="180" height="60"/><text class="node-name" x="300" y="578">ovs-bridge0</text><text class="node-type" x="300" y="597">R2 client LAN</text></g>
+        <g data-id="ovs-bridge1"><rect class="node bridge" x="610" y="550" width="180" height="60"/><text class="node-name" x="700" y="578">ovs-bridge1</text><text class="node-type" x="700" y="597">R3 client LAN</text></g>
+        <g data-id="H1"><rect class="node host" x="110" y="680" width="120" height="58"/><text class="node-name" x="170" y="706">H1</text><text class="node-type" x="170" y="725">DHCP client</text></g>
+        <g data-id="H2"><rect class="node host" x="350" y="680" width="120" height="58"/><text class="node-name" x="410" y="706">H2</text><text class="node-type" x="410" y="725">DHCP client</text></g>
+        <g data-id="H3"><rect class="node host" x="530" y="680" width="120" height="58"/><text class="node-name" x="590" y="706">H3</text><text class="node-type" x="590" y="725">DHCP client</text></g>
+        <g data-id="H4"><rect class="node host" x="750" y="680" width="120" height="58"/><text class="node-name" x="810" y="706">H4</text><text class="node-type" x="810" y="725">DHCP client</text></g>
+    </g>
+    <g class="legend" transform="translate(32 772)">
+        <path class="link link-core" d="M 0 0 H 28"/><text x="38" y="4">OSPF core</text>
+        <path class="link link-external" d="M 145 0 H 173"/><text x="183" y="4">eBGP uplinks</text>
+        <path class="link link-access" d="M 315 0 H 343"/><text x="353" y="4">OVS access</text>
+    </g>
+</svg>

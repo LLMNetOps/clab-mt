@@ -8,61 +8,84 @@
     {
       "id": "R1",
       "position": {
-        "x": 340,
-        "y": 360
-      }
+        "x": 320,
+        "y": 380
+      },
+      "icon": "dcgw"
     },
     {
       "id": "R2",
       "position": {
-        "x": 240,
-        "y": 480
-      },
-      "labelPosition": "left",
-      "icon": "pe"
+        "x": 200,
+        "y": 520
+      }
     },
     {
       "id": "R3",
       "position": {
         "x": 440,
-        "y": 480
-      },
-      "labelPosition": "right",
-      "icon": "pe"
+        "y": 520
+      }
     },
     {
       "id": "ISP",
       "position": {
-        "x": 240,
+        "x": 200,
         "y": 260
-      },
-      "icon": "cloud",
-      "labelPosition": "top"
+      }
     },
     {
       "id": "REN",
       "position": {
         "x": 440,
         "y": 260
-      },
-      "icon": "cloud",
-      "labelPosition": "top"
+      }
     },
     {
       "id": "H1",
       "position": {
-        "x": 240,
-        "y": 580
+        "x": 120,
+        "y": 780
       },
       "icon": "client"
     },
     {
       "id": "H2",
       "position": {
-        "x": 440,
-        "y": 580
+        "x": 260,
+        "y": 780
       },
       "icon": "client"
+    },
+    {
+      "id": "H3",
+      "position": {
+        "x": 380,
+        "y": 780
+      },
+      "icon": "client"
+    },
+    {
+      "id": "H4",
+      "position": {
+        "x": 520,
+        "y": 780
+      },
+      "icon": "client"
+    },
+    {
+      "id": "ovs-bridge0",
+      "position": {
+        "x": 200,
+        "y": 640
+      }
+    },
+    {
+      "id": "ovs-bridge1",
+      "position": {
+        "x": 440,
+        "y": 640
+      }
     }
   ],
   "edgeAnnotations": [],

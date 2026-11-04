@@ -12,7 +12,7 @@ from tools.render_routeros import render_configs
 
 class RouterOsRendererTests(unittest.TestCase):
     def test_routeros_nodes_force_qemu_tcg_fallback_when_kvm_is_unavailable(self):
-        clab_path = Path(__file__).parents[1] / "clab.yml"
+        clab_path = Path(__file__).parents[1] / "llmnetops.clab.yml"
         with clab_path.open("r", encoding="utf-8") as fh:
             clab = yaml.safe_load(fh)
 
@@ -21,6 +21,48 @@ class RouterOsRendererTests(unittest.TestCase):
             self.assertIn("QEMU_ADDITIONAL_ARGS", node["env"])
             self.assertIn("-accel", node["env"]["QEMU_ADDITIONAL_ARGS"])
             self.assertIn("tcg", node["env"]["QEMU_ADDITIONAL_ARGS"])
+
+    def test_client_management_addresses_and_router_lan_links_are_unique(self):
+        clab_path = Path(__file__).parents[1] / "llmnetops.clab.yml"
+        with clab_path.open("r", encoding="utf-8") as fh:
+            clab = yaml.safe_load(fh)
+
+        nodes = clab["topology"]["nodes"]
+        management_addresses = [
+            node["mgmt-ipv4"]
+            for node in nodes.values()
+            if "mgmt-ipv4" in node
+        ]
+        self.assertEqual(len(management_addresses), len(set(management_addresses)))
+
+        links = {
+            tuple(link["endpoints"])
+            for link in clab["topology"]["links"]
+        }
+        endpoints = {endpoint for link in links for endpoint in link}
+        self.assertEqual(nodes["ovs-bridge0"]["kind"], "ovs-bridge")
+        self.assertEqual(nodes["ovs-bridge1"]["kind"], "ovs-bridge")
+        self.assertIn(("R2:ether4", "ovs-bridge0:ovs0-r2"), links)
+        self.assertIn(("H1:eth1", "ovs-bridge0:ovs0-h1"), links)
+        self.assertIn(("H2:eth1", "ovs-bridge0:ovs0-h2"), links)
+        self.assertIn(("R3:ether4", "ovs-bridge1:ovs1-r3"), links)
+        self.assertIn(("H3:eth1", "ovs-bridge1:ovs1-h3"), links)
+        self.assertIn(("H4:eth1", "ovs-bridge1:ovs1-h4"), links)
+        self.assertNotIn("R2:ether5", endpoints)
+        self.assertNotIn("R3:ether5", endpoints)
+
+    def test_core_client_lan_bridges_router_ports_for_dhcp_and_ospf(self):
+        template_path = (
+            Path(__file__).parents[1] / "configs" / "routeros" / "core.rsc.tmpl"
+        )
+        template = template_path.read_text(encoding="utf-8")
+
+        self.assertIn("add name=bridge-lan protocol-mode=none", template)
+        self.assertIn("add bridge=bridge-lan interface=ether4", template)
+        self.assertNotIn("add bridge=bridge-lan interface=ether5", template)
+        self.assertIn("interface=bridge-lan comment=\"{{ENDPOINT_NAME}} LAN\"", template)
+        self.assertIn("disabled=no interface=bridge-lan lease-time=1h", template)
+        self.assertIn("interfaces=bridge-lan passive", template)
 
     def test_build_script_uses_pre_downloaded_chr_archive(self):
         script_path = Path(__file__).parents[1] / "tools" / "build-routeros-image.sh"

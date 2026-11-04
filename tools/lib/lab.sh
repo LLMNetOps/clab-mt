@@ -91,6 +91,7 @@ child = pexpect.spawn(
         "-o", "StrictHostKeyChecking=no",
         "-o", "UserKnownHostsFile=/dev/null",
         "-o", "ConnectTimeout=5",
+        "-o", "PubkeyAuthentication=no",
         "admin@" + os.environ["ROUTEROS_HOST"],
         os.environ["ROUTEROS_COMMAND"],
     ],

@@ -49,8 +49,8 @@ add chain=bgp-in-ren rule="reject"
 add chain=bgp-out-campus rule="if (dst == 10.255.10.0/24 || dst == 10.255.20.0/24) { accept } else { reject }"
 
 /routing bgp connection
-add name=to-isp instance=campus-bgp remote.address=10.255.2.2 remote.as=65001 local.address=10.255.2.1 local.role=ebgp tcp-md5-key="campus-isp-ebgp" connect=yes listen=yes hold-time=30s afi=ip input.filter=bgp-in-isp input.limit-process-routes-ipv4=1000 output.redistribute=ospf output.filter-chain=bgp-out-campus
-add name=to-ren instance=campus-bgp remote.address=10.255.2.6 remote.as=65002 local.address=10.255.2.5 local.role=ebgp tcp-md5-key="campus-ren-ebgp" connect=yes listen=yes hold-time=30s afi=ip input.filter=bgp-in-ren input.limit-process-routes-ipv4=1000 output.redistribute=ospf output.filter-chain=bgp-out-campus
+add name=to-isp instance=campus-bgp remote.address=10.255.2.2 remote.as=65001 local.address=10.255.2.1 local.role=ebgp connect=yes listen=yes hold-time=30s afi=ip input.filter=bgp-in-isp input.limit-process-routes-ipv4=1000 output.redistribute=ospf output.filter-chain=bgp-out-campus
+add name=to-ren instance=campus-bgp remote.address=10.255.2.6 remote.as=65002 local.address=10.255.2.5 local.role=ebgp connect=yes listen=yes hold-time=30s afi=ip input.filter=bgp-in-ren input.limit-process-routes-ipv4=1000 output.redistribute=ospf output.filter-chain=bgp-out-campus
 
 # Track the ISP BGP FSM directly; REN does not qualify as Internet default.
 /system script

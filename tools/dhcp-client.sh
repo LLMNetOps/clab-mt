@@ -6,7 +6,7 @@ cd "$root_dir"
 
 usage() {
     cat <<EOF
-Usage: $0 <status|release|renew> <H1|H2>
+Usage: $0 <status|release|renew> <H1|H2|H3|H4>
 
 Inspect, release, or renew DHCP on one endpoint host.
 EOF
@@ -32,9 +32,9 @@ case "$action" in
         ;;
 esac
 case "$endpoint" in
-    H1|H2) ;;
+    H1|H2|H3|H4) ;;
     *)
-        echo "Unknown endpoint host: $endpoint (expected H1 or H2)" >&2
+        echo "Unknown endpoint host: $endpoint (expected H1, H2, H3, or H4)" >&2
         exit 2
         ;;
 esac
