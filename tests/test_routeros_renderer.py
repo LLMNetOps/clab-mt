@@ -151,6 +151,23 @@ class RouterOsRendererTests(unittest.TestCase):
                 self.assertNotIn("/user set", config)
                 self.assertNotIn("password=", config)
 
+    def test_all_checked_in_router_configs_enable_read_only_snmp(self):
+        config_dir = Path(__file__).parents[1] / "configs" / "routeros"
+        expected = (
+            "/snmp set enabled=yes",
+            '/snmp set contact="Group 0" location="Lab LLMNetOps"',
+            "/snmp community set [find default=yes] name=llmnetops",
+            "/snmp community set llmnetops read-access=yes write-access=no",
+        )
+
+        for router in ("r1", "r2", "r3"):
+            with self.subTest(router=router):
+                config = (config_dir / f"{router}.rsc").read_text(
+                    encoding="utf-8"
+                )
+                for command in expected:
+                    self.assertIn(command, config)
+
     def test_renders_edge_policy_and_both_campus_core_routers(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             config_dir = Path(temp_dir)

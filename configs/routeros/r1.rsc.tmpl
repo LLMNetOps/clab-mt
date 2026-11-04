@@ -1,6 +1,11 @@
 # Campus edge router, RouterOS 7.21.5
 /system identity set name=R1
 
+/snmp set enabled=yes
+/snmp set contact="Group 0" location="Lab LLMNetOps"
+/snmp community set [find default=yes] name=llmnetops
+/snmp community set llmnetops read-access=yes write-access=no
+
 # The lab is intentionally permissive; it has no NAT and no external access.
 /ip firewall filter remove [find]
 /ip firewall nat remove [find]
