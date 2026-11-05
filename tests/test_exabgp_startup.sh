@@ -18,9 +18,12 @@ docker run -d \
     --cap-add NET_ADMIN \
     --env DATA_INTERFACE=eth1 \
     --env DATA_ADDRESS=10.255.2.2/30 \
+    --env DATA_GATEWAY=10.255.2.1 \
     --volume "$root_dir/generated/isp.conf:/etc/exabgp/exabgp.conf:ro" \
     "$image" >/dev/null
 
 verify_delayed_interface_startup "$container" ExaBGP 2
+docker exec "$container" ip -4 route show default \
+    | grep -F "default via 10.255.2.1 dev eth1" >/dev/null
 
 echo "ExaBGP startup test: delayed eth1 attachment passed"

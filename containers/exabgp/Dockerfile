@@ -9,7 +9,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 COPY containers/common/debian.sources /etc/apt/sources.list.d/debian.sources
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends iproute2=6.1.0-3 \
+    && apt-get install -y --no-install-recommends \
+        iproute2=6.1.0-3 \
+        traceroute=1:2.1.2-1 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY containers/common/wait-for-interface.sh /usr/local/lib/campus/wait-for-interface.sh

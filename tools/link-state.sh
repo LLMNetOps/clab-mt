@@ -10,7 +10,8 @@ source tools/lib/links.sh
 
 usage() {
     cat <<EOF
-Usage: $0 <status|down|up> <r2-r3|isp|ren>
+    Usage: $0 <status|down|up> <node-a> <node-b>
+        $0 <status|down|up> <r1-r2|r1-r3|r2-r3|isp|ren>
        $0 list
 
 Show, disable, or restore one data-plane link in the deployed lab.
@@ -29,13 +30,20 @@ if [[ ${1:-} == list && $# == 1 ]]; then
     exit 0
 fi
 
-if [[ $# != 2 ]]; then
+if [[ $# != 2 && $# != 3 ]]; then
     usage >&2
     exit 2
 fi
 
 action=$1
-link=$2
+if [[ $# == 3 ]]; then
+    if ! link=$(lab_link_name_for_pair "$2" "$3"); then
+        echo "Unknown link pair: $2 $3" >&2
+        exit 2
+    fi
+else
+    link=$2
+fi
 case "$action" in
     status|down|up) ;;
     *)

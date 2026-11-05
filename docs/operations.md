@@ -96,18 +96,32 @@ make traffic TRAFFIC_SOURCE=H2 TRAFFIC_DESTINATION=H1
 
 `TRAFFIC_INTERVAL` sets the interval in seconds. Its default is `1`.
 
+Trace the path between endpoint hosts, campus routers, or external speakers
+with `make traceroute SOURCE DESTINATION`. Nodes can be H1-H4, R1-R3, ISP, or
+REN. The defaults are H1 and H2:
+
+Tracing from ISP or REN requires the updated ExaBGP image; run `make deploy`
+to rebuild the image and reconfigure the lab.
+
+```bash
+make traceroute H1 H3
+make traceroute H1 ISP
+make traceroute H1 R1
+make traceroute R1 H1
+```
+
 ## Control endpoint DHCP
 
 Show the DHCP client state, IPv4 address, and data-plane default route:
 
 ```bash
-make dhcp-status ENDPOINT=H1
+make dhcp-status H1
 ```
 
 Release the lease:
 
 ```bash
-make dhcp-release ENDPOINT=H1
+make dhcp-release H1
 ```
 
 The endpoint container stays running. The command removes the IPv4 address
@@ -117,12 +131,13 @@ a new lease or recreate the container.
 Request a new lease:
 
 ```bash
-make dhcp-renew ENDPOINT=H1
+make dhcp-renew H1
 ```
 
-Use `ENDPOINT=H2`, `H3`, or `H4` to manage the other clients. H1/H2 use R2's
-LAN; H3/H4 use R3's. `DHCP_TIMEOUT` controls how many seconds the release or
-renewal operation can take. Its default is `30`.
+Use the endpoint node as the final argument, for example `make dhcp-status H2`.
+The legacy `ENDPOINT=H1` form is also accepted. H1/H2 use R2's LAN; H3/H4 use
+R3's. `DHCP_TIMEOUT` controls how many seconds the release or renewal operation
+can take. Its default is `30`.
 
 Run the client lease-cycle test on all four endpoint hosts:
 
@@ -134,25 +149,29 @@ The tool does not change the DHCP servers on R2 or R3.
 
 ## Control links
 
-The supported link names are:
+The supported endpoint pairs are:
 
-| Link name | Lab connection |
+| Endpoints | Lab connection |
 | --- | --- |
-| `r2-r3` | R2–R3 campus-core link |
-| `isp` | R1–ISP external BGP link |
-| `ren` | R1–REN external BGP link |
+| `r1 r2` | R1–R2 campus-core link |
+| `r1 r3` | R1–R3 campus-core link |
+| `r2 r3` | R2–R3 campus-core link |
+| `r1 isp` | R1–ISP external BGP link |
+| `r1 ren` | R1–REN external BGP link |
 
 Show a link:
 
 ```bash
-make link status isp
+make link status r1 isp
+make link status r1 r2
 ```
 
 Disable and restore the link:
 
 ```bash
-make link down isp
-make link up isp
+make link down r1 isp
+make link up r1 isp
+make link down r1 r3
 ```
 
 The link tool makes only the requested change. It does not restore a disabled

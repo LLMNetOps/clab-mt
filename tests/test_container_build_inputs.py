@@ -40,6 +40,7 @@ class ContainerBuildInputTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertRegex(exabgp, r"\biproute2=[^ \\\n]+")
+        self.assertRegex(exabgp, r"\btraceroute=[^ \\\n]+")
 
     def test_apt_indexes_use_a_dated_snapshot(self):
         sources = (ROOT / "containers/common/debian.sources").read_text(
@@ -90,6 +91,19 @@ class ContainerBuildInputTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn("campus-dhcp-client supervise", entrypoint)
+
+    def test_exabgp_data_interface_uses_r1_as_default_gateway(self):
+        topology = (ROOT / "llmnetops.clab.yml").read_text(encoding="utf-8")
+        self.assertIn("DATA_ADDRESS: 10.255.2.2/30\n        DATA_GATEWAY: 10.255.2.1", topology)
+        self.assertIn("DATA_ADDRESS: 10.255.2.6/30\n        DATA_GATEWAY: 10.255.2.5", topology)
+
+        entrypoint = (ROOT / "containers/exabgp/entrypoint.sh").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(
+            'ip route replace default via "$gateway" dev "$interface"',
+            entrypoint,
+        )
 
 
 if __name__ == "__main__":

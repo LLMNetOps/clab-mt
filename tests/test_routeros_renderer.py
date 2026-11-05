@@ -74,6 +74,17 @@ class RouterOsRendererTests(unittest.TestCase):
         self.assertIn("disabled=no interface=bridge-lan lease-time=1h", template)
         self.assertIn("interfaces=bridge-lan passive", template)
 
+    def test_campus_ospf_links_use_three_and_nine_second_timers(self):
+        config_dir = Path(__file__).parents[1] / "configs" / "routeros"
+        timer = "hello-interval=3s dead-interval=9s"
+        for router in ("r1", "r2", "r3"):
+            config = (config_dir / f"{router}.rsc").read_text(encoding="utf-8")
+            self.assertEqual(config.count(timer), 2, router)
+
+        for template in ("r1.rsc.tmpl", "core.rsc.tmpl"):
+            source = (config_dir / template).read_text(encoding="utf-8")
+            self.assertEqual(source.count(timer), 2, template)
+
     def test_build_script_uses_pre_downloaded_chr_archive(self):
         script_path = Path(__file__).parents[1] / "tools" / "build-routeros-image.sh"
         archive_path = Path(__file__).parents[1] / "chr-7.21.5.vmdk.zip"

@@ -33,7 +33,7 @@ add name=campus-ospf version=2 router-id=10.255.0.2
 /routing ospf area
 add name=backbone area-id=0.0.0.0 instance=campus-ospf
 /routing ospf interface-template
-add area=backbone interfaces=ether2 type=ptp cost=10
-add area=backbone interfaces=ether3 type=ptp cost=10
+add area=backbone interfaces=ether2 type=ptp cost=10 hello-interval=3s dead-interval=9s
+add area=backbone interfaces=ether3 type=ptp cost=10 hello-interval=3s dead-interval=9s
 add area=backbone interfaces=bridge-lan passive
 add area=backbone interfaces=lo passive

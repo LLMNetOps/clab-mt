@@ -82,25 +82,33 @@ Select any two different endpoints, for example H1 to H3:
 make traffic TRAFFIC_SOURCE=H1 TRAFFIC_DESTINATION=H3
 ```
 
+Trace routes between endpoint hosts, routers, and external speakers with:
+
+```bash
+make traceroute H1 ISP
+make traceroute H1 R1
+```
+
 Press Ctrl-C to stop the traffic.
 
 Show, disable, and restore one lab link:
 
 ```bash
-make link status r2-r3
-make link down r2-r3
-make link up r2-r3
+make link status r2 r3
+make link down r2 r3
+make link up r2 r3
 ```
 
-Valid link names are `r2-r3`, `isp`, and `ren`. A link that you disable
-stays disabled until you restore it or destroy the lab.
+Link endpoints can be given in either order. For the external links, use
+`r1 isp` or `r1 ren`. A link that you disable stays disabled until you restore
+it or destroy the lab.
 
 Inspect, release, and renew DHCP on an endpoint host:
 
 ```bash
-make dhcp-status ENDPOINT=H1
-make dhcp-release ENDPOINT=H1
-make dhcp-renew ENDPOINT=H1
+make dhcp-status H1
+make dhcp-release H1
+make dhcp-renew H1
 ```
 
 The supported endpoint hosts are H1, H2, H3, and H4. Releasing a lease does

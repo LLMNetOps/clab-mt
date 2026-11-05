@@ -50,6 +50,7 @@ topology:
       env:
         DATA_INTERFACE: eth1
         DATA_ADDRESS: 10.255.2.2/30
+        DATA_GATEWAY: 10.255.2.1
       cmd: /etc/exabgp/exabgp.conf
 
     REN:
@@ -61,6 +62,7 @@ topology:
       env:
         DATA_INTERFACE: eth1
         DATA_ADDRESS: 10.255.2.6/30
+        DATA_GATEWAY: 10.255.2.5
       cmd: /etc/exabgp/exabgp.conf
 
     H1:

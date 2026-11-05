@@ -26,6 +26,8 @@ them into OSPF. While the R1–ISP BGP session is established, R1 originates
 `0.0.0.0/0` into OSPF as external type 1 with metric 20. The default is
 withdrawn when ISP is unavailable even if REN remains established. Neither
 external speaker advertises a default or provides data-plane forwarding.
+The campus router-to-router OSPF links use 3-second hello and 9-second dead
+intervals.
 
 ## Route generation
 

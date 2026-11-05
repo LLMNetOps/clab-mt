@@ -6,10 +6,15 @@ cd "$root_dir"
 
 source tools/lib/links.sh
 
-[[ "$(lab_link_names | paste -sd ' ' -)" == "r2-r3 isp ren" ]]
+[[ "$(lab_link_names | paste -sd ' ' -)" == "r1-r2 r1-r3 r2-r3 isp ren" ]]
+[[ "$(lab_link_target r1-r2)" == "R1|eth1|R1:ether2 - R2:ether2" ]]
+[[ "$(lab_link_target r1-r3)" == "R1|eth2|R1:ether3 - R3:ether2" ]]
 [[ "$(lab_link_target r2-r3)" == "R2|eth2|R2:ether3 - R3:ether3" ]]
 [[ "$(lab_link_target isp)" == "R1|eth3|R1:ether4 - ISP:eth1" ]]
 [[ "$(lab_link_target ren)" == "R1|eth4|R1:ether5 - REN:eth1" ]]
+[[ "$(lab_link_name_for_pair r1 r2)" == "r1-r2" ]]
+[[ "$(lab_link_name_for_pair R1 ISP)" == "isp" ]]
+[[ "$(lab_link_name_for_pair r3 r2)" == "r2-r3" ]]
 if lab_link_target unknown >/dev/null; then
     echo "Unknown link was accepted" >&2
     exit 1
@@ -30,9 +35,27 @@ grep -F "qemu-efi-aarch64-package: 2025.02-8+deb13u1" \
     <<<"$routeros_inputs" >/dev/null
 grep -F "qemu-system-x86-package: 1:10.0.8+ds-0+deb13u1+b2" \
     <<<"$routeros_inputs" >/dev/null
-bash tools/link-state.sh --help | grep -F "r2-r3|isp|ren" >/dev/null
+bash tools/link-state.sh --help | grep -F "r1-r2|r1-r3|r2-r3|isp|ren" >/dev/null
+link_pair_command=$(make -n link status r1 r2)
+grep -F 'tools/link-state.sh "status" "r1" "r2"' <<<"$link_pair_command" >/dev/null
+link_external_command=$(make -n link down r1 isp)
+grep -F 'tools/link-state.sh "down" "r1" "isp"' <<<"$link_external_command" >/dev/null
 bash tools/restart-router.sh --help | grep -F "Usage: tools/restart-router.sh R1" >/dev/null
 bash tools/traffic.sh --help | grep -F "Send ICMP traffic" >/dev/null
+bash tools/traceroute.sh --help | grep -F "H1|H2|H3|H4|R1|R2|R3|ISP|REN" >/dev/null
+traceroute_command=$(make -n traceroute H1 H4)
+grep -F 'TRAFFIC_SOURCE="H1"' <<<"$traceroute_command" >/dev/null
+grep -F 'TRAFFIC_DESTINATION="H4"' <<<"$traceroute_command" >/dev/null
+dhcp_status_command=$(make -n dhcp-status H4)
+grep -F 'dhcp-client.sh status "H4"' <<<"$dhcp_status_command" >/dev/null
+dhcp_default_command=$(make -n dhcp-status)
+grep -F 'dhcp-client.sh status "H1"' <<<"$dhcp_default_command" >/dev/null
+dhcp_legacy_command=$(make -n dhcp-status ENDPOINT=H2)
+grep -F 'dhcp-client.sh status "H2"' <<<"$dhcp_legacy_command" >/dev/null
+dhcp_release_command=$(make -n dhcp-release H2)
+grep -F 'dhcp-client.sh release "H2"' <<<"$dhcp_release_command" >/dev/null
+dhcp_renew_command=$(make -n dhcp-renew H3)
+grep -F 'dhcp-client.sh renew "H3"' <<<"$dhcp_renew_command" >/dev/null
 bash tools/dhcp-client.sh --help | grep -F "H1|H2|H3|H4" >/dev/null
 bash tools/traffic.sh --help | grep -F "H1|H2|H3|H4" >/dev/null
 sh containers/endpoint/dhcp-client.sh --help | grep -F "status|release|renew" >/dev/null
@@ -69,6 +92,19 @@ if bash tools/traffic.sh --source H3 --destination H3 >/dev/null 2>&1; then
     echo "traffic tool accepted the same endpoint as source and destination" >&2
     exit 1
 fi
+if bash tools/traceroute.sh --source H5 --destination H4 >/dev/null 2>&1; then
+    echo "traceroute tool accepted an unknown endpoint host" >&2
+    exit 1
+fi
+if bash tools/traceroute.sh --source H3 --destination H3 >/dev/null 2>&1; then
+    echo "traceroute tool accepted the same endpoint as source and destination" >&2
+    exit 1
+fi
+for node in ISP REN R1 R2 R3; do
+    traceroute_error=$(bash tools/traceroute.sh --source "$node" --destination "$node" 2>&1 || true)
+    grep -F "Traceroute source and destination must be different nodes." \
+        <<<"$traceroute_error" >/dev/null
+done
 
 ovs_fixture=$(mktemp -d)
 trap 'rm -rf "$ovs_fixture"' EXIT
